@@ -11,12 +11,8 @@
     <!-- html2canvas 라이브러리 (이미지 캡처용) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        body {
-            word-break: keep-all;
-        }
-        input, select, button {
-            font-size: 14px !important;
-        }
+        body { word-break: keep-all; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        input, select, button { font-size: 14px !important; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen pb-24">
@@ -27,19 +23,24 @@
             <h1 class="text-base sm:text-lg font-bold flex items-center gap-2 truncate">
                 <i class="fa-solid fa-people-group"></i> 사랑 집단 관리 시스템
             </h1>
-            <div id="header-datetime" class="text-[11px] sm:text-xs text-indigo-200 whitespace-nowrap"></div>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <span id="service-year-badge" class="text-[10px] sm:text-xs px-2 py-0.5 rounded bg-indigo-500 font-medium"></span>
+                <span id="cloud-status" class="text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-indigo-800 text-indigo-200 flex items-center gap-1 shadow-inner">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> 연결 중...
+                </span>
+            </div>
         </div>
     </header>
 
     <!-- 메인 컨텐츠 영역 -->
     <main class="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-4 mb-4">
         
-        <!-- 1. 사랑집단 탭 (엑셀 형식 명단표) -->
+        <!-- 1. 사랑집단 탭 -->
         <section id="tab-group" class="tab-content space-y-4">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-3">
                 <div>
-                    <h2 class="text-sm sm:text-base font-bold text-slate-700">사랑 집단 성원 명단 (엑셀 형식)</h2>
-                    <p class="text-xs text-slate-500">집단 성원들의 구분(형제/자매/자녀) 및 다중 임명 상태를 관리합니다.</p>
+                    <h2 class="text-sm sm:text-base font-bold text-slate-700">사랑 집단 성원 명단</h2>
+                    <p class="text-xs text-slate-500">성원 구분 및 직책/임명을 관리합니다.</p>
                 </div>
                 <button onclick="openMemberModal()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center justify-center gap-1 shadow">
                     <i class="fa-solid fa-user-plus"></i> 성원 추가
@@ -60,7 +61,6 @@
                             </tr>
                         </thead>
                         <tbody id="member-table-body" class="divide-y divide-slate-200">
-                            <!-- 동적 렌더링 -->
                         </tbody>
                     </table>
                 </div>
@@ -76,12 +76,10 @@
                 </div>
                 <div class="flex items-center gap-2 w-full md:w-auto">
                     <select id="attendance-session-select" onchange="changeAttendanceSession()" class="border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-auto">
-                        <!-- 동적 생성 -->
                     </select>
                 </div>
             </div>
 
-            <!-- 월별 통계 보기 토글 / 월 선택 -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     <label class="text-xs font-bold text-slate-600 whitespace-nowrap">월별 보기:</label>
@@ -93,7 +91,6 @@
                 </div>
             </div>
 
-            <!-- 1) 회차별 체크 뷰 -->
             <div id="view-mode-check" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs sm:text-sm">
@@ -102,20 +99,18 @@
                                 <th class="p-3 w-12 text-center">No</th>
                                 <th class="p-3 w-28">이름</th>
                                 <th class="p-3 w-48 text-center">참석 여부</th>
-                                <th class="p-3">불참 사유 (불참 시 입력)</th>
+                                <th class="p-3">불참 사유</th>
                             </tr>
                         </thead>
                         <tbody id="attendance-check-tbody" class="divide-y divide-slate-200">
-                            <!-- 동적 렌더링 -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- 2) 월별 매트릭스 뷰 -->
             <div id="view-mode-matrix" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hidden">
                 <div class="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                    <span class="text-xs font-bold text-slate-600" id="matrix-month-title">월별 출석 현황 매트릭스</span>
+                    <span class="text-xs font-bold text-slate-600" id="matrix-month-title">월별 출석 현황</span>
                     <button onclick="exportAttendanceCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1">
                         <i class="fa-solid fa-file-excel"></i> CSV 내보내기
                     </button>
@@ -123,10 +118,8 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs whitespace-nowrap">
                         <thead id="matrix-thead" class="bg-slate-100 border-b border-slate-200 text-slate-600">
-                            <!-- 동적 생성 -->
                         </thead>
                         <tbody id="matrix-tbody" class="divide-y divide-slate-200">
-                            <!-- 동적 생성 -->
                         </tbody>
                     </table>
                 </div>
@@ -135,41 +128,77 @@
 
         <!-- 3. 봉사보고 탭 -->
         <section id="tab-volunteer" class="tab-content space-y-4 hidden">
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div>
-                    <h2 class="text-sm sm:text-base font-bold text-slate-700">월별 봉사 보고</h2>
-                    <p class="text-xs text-slate-500">파이오니아(시간 기록) 및 일반 성원(참석 체크), 연구 및 비고 관리</p>
+            <!-- 상단 컨트롤 카드 -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div>
+                        <h2 class="text-sm sm:text-base font-bold text-slate-700 flex items-center gap-2">
+                            <span>월별 봉사 보고 및 누적 통계</span>
+                            <span id="current-sy-label" class="text-xs font-normal text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200"></span>
+                        </h2>
+                        <p class="text-xs text-slate-500">파이오니아(봉사시간+고려시간, 월50h/연550-600h 목표) 및 일반성원 보고 관리</p>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <input type="month" id="volunteer-month-input" onchange="onVolunteerMonthChanged()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1 sm:flex-none">
+                    </div>
                 </div>
-                <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap justify-between sm:justify-start">
-                    <input type="month" id="volunteer-month-input" onchange="renderVolunteerTable()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <button onclick="shareVolunteerReportSMS()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1 shadow whitespace-nowrap">
-                        <i class="fa-solid fa-comment-sms"></i> 문자 복사
-                    </button>
-                    <button onclick="downloadVolunteerReportImage()" class="bg-violet-600 hover:bg-violet-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1 shadow whitespace-nowrap">
-                        <i class="fa-solid fa-file-image"></i> 이미지 저장
-                    </button>
+
+                <!-- 빠른 동작 버튼 (문자 복사, 이미지 저장, 파이오니아 누적 합산) -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                    <!-- 파이오니아 합산 토글 버튼군 -->
+                    <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+                        <span class="text-[11px] font-semibold text-slate-600 px-2"><i class="fa-solid fa-chart-line text-indigo-600"></i> 파이오니아 합산:</span>
+                        <button onclick="calculatePioneerStats(3)" class="px-2.5 py-1 text-xs font-semibold rounded bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 shadow-sm transition">최근 3개월</button>
+                        <button onclick="calculatePioneerStats(6)" class="px-2.5 py-1 text-xs font-semibold rounded bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 shadow-sm transition">최근 6개월</button>
+                        <button onclick="calculatePioneerStats('year')" class="px-2.5 py-1 text-xs font-semibold rounded bg-indigo-600 text-white shadow-sm transition">봉사연도 합산</button>
+                    </div>
+
+                    <!-- 내보내기 버튼 -->
+                    <div class="flex items-center gap-2">
+                        <button onclick="shareVolunteerReportSMS()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1 shadow">
+                            <i class="fa-solid fa-comment-sms"></i> 문자 복사
+                        </button>
+                        <button onclick="downloadCleanReportImage()" class="bg-violet-600 hover:bg-violet-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1 shadow">
+                            <i class="fa-solid fa-file-image"></i> 리포트 이미지 저장
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- 이미지 캡처 영역 (봉사보고 카드 래퍼) -->
-            <div id="volunteer-capture-area" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-4 space-y-3">
-                <div class="flex justify-between items-center border-b border-slate-200 pb-3">
-                    <h3 class="font-bold text-slate-800 text-sm sm:text-base" id="volunteer-image-title">사랑 집단 봉사 보고</h3>
-                    <span class="text-xs text-slate-400" id="volunteer-image-date"></span>
+            <!-- 파이오니아 누적 합산 모달/카드 (합산 버튼 클릭 시 표시) -->
+            <div id="pioneer-stats-box" class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100 space-y-3 hidden">
+                <div class="flex justify-between items-center">
+                    <h4 id="pioneer-stats-title" class="text-xs sm:text-sm font-bold text-indigo-900 flex items-center gap-1.5">
+                        <i class="fa-solid fa-award text-amber-500"></i> 파이오니아 누적 봉사 시간 합산
+                    </h4>
+                    <button onclick="document.getElementById('pioneer-stats-box').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-xs">
+                        <i class="fa-solid fa-xmark"></i> 닫기
+                    </button>
+                </div>
+                <div id="pioneer-stats-content" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                    <!-- 동적 카드 렌더링 -->
+                </div>
+            </div>
+
+            <!-- 입력 및 편집 테이블 (실시간 저장) -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-700">월별 봉사 보고 입력 (자동 저장)</span>
+                    <span class="text-[11px] text-slate-400">수정 시 클라우드에 자동 반영됩니다</span>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs sm:text-sm whitespace-nowrap sm:whitespace-normal">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm whitespace-nowrap">
                         <thead>
                             <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 uppercase tracking-wider">
                                 <th class="p-3 w-12 text-center">No</th>
-                                <th class="p-3 w-32">이름 (임명)</th>
-                                <th class="p-3 w-36">봉사 시간/참여</th>
-                                <th class="p-3 w-36">연구 (건수/이름)</th>
+                                <th class="p-3 w-28">이름</th>
+                                <th class="p-3 w-36">봉사 시간 / 참여</th>
+                                <th class="p-3 w-28">고려 시간</th>
+                                <th class="p-3 w-32">연구 (건수/이름)</th>
                                 <th class="p-3">비고</th>
                             </tr>
                         </thead>
                         <tbody id="volunteer-tbody" class="divide-y divide-slate-200">
-                            <!-- 동적 렌더링 -->
                         </tbody>
                     </table>
                 </div>
@@ -195,10 +224,8 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs sm:text-sm whitespace-nowrap">
                         <thead id="pub-thead">
-                            <!-- 동적 렌더링 -->
                         </thead>
                         <tbody id="pub-tbody" class="divide-y divide-slate-200">
-                            <!-- 동적 렌더링 -->
                         </tbody>
                     </table>
                 </div>
@@ -209,19 +236,15 @@
         <section id="tab-settings" class="tab-content space-y-4 hidden">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                 <h2 class="text-sm sm:text-base font-bold text-slate-700 mb-1">데이터 및 설정 관리</h2>
-                <p class="text-xs text-slate-500 mb-4">초기 데이터 복원 및 백업을 수행할 수 있습니다.</p>
+                <p class="text-xs text-slate-500 mb-4">클라우드 데이터베이스 초기화 및 백업을 수행합니다.</p>
                 
                 <div class="flex flex-col sm:flex-row flex-wrap gap-3">
                     <button onclick="resetToDefaultData()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow">
-                        <i class="fa-solid fa-rotate-right"></i> 기본 데이터로 초기화
+                        <i class="fa-solid fa-rotate-right"></i> 기본 데이터로 초기화 (클라우드)
                     </button>
                     <button onclick="exportDataJSON()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow">
                         <i class="fa-solid fa-download"></i> 데이터 백업 (JSON)
                     </button>
-                    <label class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow cursor-pointer">
-                        <i class="fa-solid fa-upload"></i> 데이터 복원 (JSON)
-                        <input type="file" id="import-file" accept=".json" onchange="importDataJSON(event)" class="hidden">
-                    </label>
                 </div>
             </div>
         </section>
@@ -314,7 +337,6 @@
                 <button onclick="addPubType()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-4 py-2 rounded-lg font-medium shadow whitespace-nowrap">추가</button>
             </div>
             <div class="max-h-48 overflow-y-auto border border-slate-200 rounded-lg divide-y divide-slate-200" id="pub-type-list">
-                <!-- 동적 렌더링 -->
             </div>
             <div class="flex justify-end pt-2">
                 <button onclick="closePubTypeModal()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300">닫기</button>
@@ -322,22 +344,55 @@
         </div>
     </div>
 
-    <!-- 자바스크립트 로직 -->
-    <script>
-        // ★ 앱 버전 (코드를 수정하여 업데이트할 때마다 이 숫자를 1씩 올려주세요 예: '1.0.1', '1.0.2')
-        const APP_VERSION = '1.0.0';
+    <!-- ★ 이미지 캡처용 전용 템플릿 (화면 밖 렌더링: 깔끔한 스마트폰 카드형) -->
+    <div id="clean-image-template" style="position: absolute; left: -9999px; top: -9999px; width: 440px;" class="bg-white p-6 font-sans text-slate-800">
+        <div class="border-b-2 border-indigo-600 pb-3 mb-4 flex justify-between items-end">
+            <div>
+                <span class="text-xs font-semibold text-indigo-600 tracking-wider uppercase" id="card-sy-text">2027 봉사연도</span>
+                <h2 class="text-xl font-extrabold text-slate-900" id="card-month-title">사랑 집단 봉사 보고</h2>
+            </div>
+            <span class="text-xs text-slate-400 font-medium" id="card-gen-date"></span>
+        </div>
 
-        function checkAppVersion() {
-            const savedVersion = localStorage.getItem('sarang_app_version');
-            if (savedVersion && savedVersion !== APP_VERSION) {
-                if (confirm("새로운 업데이트가 있습니다! 최신 버전으로 새로고침하여 적용하시겠습니까?")) {
-                    localStorage.setItem('sarang_app_version', APP_VERSION);
-                    window.location.reload(true);
-                }
-            } else if (!savedVersion) {
-                localStorage.setItem('sarang_app_version', APP_VERSION);
-            }
-        }
+        <div class="overflow-hidden rounded-lg border border-slate-200">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-indigo-50 text-indigo-900 font-bold border-b border-indigo-100">
+                        <th class="p-2.5 w-10 text-center">No</th>
+                        <th class="p-2.5 w-24">이름</th>
+                        <th class="p-2.5 w-32 text-center">봉사 시간/참여</th>
+                        <th class="p-2.5 w-20 text-center">연구</th>
+                        <th class="p-2.5">비고</th>
+                    </tr>
+                </thead>
+                <tbody id="card-table-body" class="divide-y divide-slate-100">
+                    <!-- 깔끔한 텍스트로 동적 생성 -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-400 text-right">
+            사랑 집단 통합 관리 시스템
+        </div>
+    </div>
+
+    <!-- 파이어베이스 SDK (Firebase 키 유지) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdZlSMTeiZvmN_qn4Yqva06NE_NR7QB7I",
+            authDomain: "love-d0dcf.firebaseapp.com",
+            projectId: "love-d0dcf",
+            storageBucket: "love-d0dcf.firebasestorage.app",
+            messagingSenderId: "1040684162668",
+            appId: "1:1040684162668:web:a2b09db58fa6309e430249"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const DATA_DOC = doc(db, "sarangGroup", "mainData");
 
         const DEFAULT_MEMBERS = [
             { name: "이지후", gender: "형제", roles: ["파이오니아"], memo: "" },
@@ -356,70 +411,118 @@
             { name: "유금년", gender: "자매", roles: [], memo: "" },
             { name: "김명분", gender: "자매", roles: [], memo: "" }
         ];
-
         const DEFAULT_PUB_TYPES = ["연구용", "대형", "집회교재", "배부용"];
 
         let appData = {
-            members: [],
-            pubTypes: [],
+            members: DEFAULT_MEMBERS,
+            pubTypes: DEFAULT_PUB_TYPES,
             attendance: {},
             volunteer: {},
             publication: {}
         };
 
+        // 클라우드 실시간 동기화
+        onSnapshot(DATA_DOC, (docSnap) => {
+            const statusEl = document.getElementById("cloud-status");
+            if (docSnap.exists()) {
+                appData = docSnap.data();
+                if (!appData.members || appData.members.length === 0) appData.members = DEFAULT_MEMBERS;
+                if (!appData.pubTypes) appData.pubTypes = DEFAULT_PUB_TYPES;
+                if (!appData.attendance) appData.attendance = {};
+                if (!appData.volunteer) appData.volunteer = {};
+                if (!appData.publication) appData.publication = {};
+
+                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> 클라우드 연결됨`;
+                statusEl.className = "text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-emerald-800 text-emerald-100 flex items-center gap-1 shadow-inner";
+            } else {
+                setDoc(DATA_DOC, appData);
+            }
+            renderAllViews();
+        }, (error) => {
+            console.error("Firebase sync error:", error);
+            const statusEl = document.getElementById("cloud-status");
+            statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400"></span> 오프라인`;
+            statusEl.className = "text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-rose-800 text-rose-100 flex items-center gap-1 shadow-inner";
+        });
+
+        // 클라우드 저장 전역 함수
+        window.saveDataToCloud = async function() {
+            try {
+                await setDoc(DATA_DOC, appData);
+            } catch (e) {
+                console.error("저장 실패:", e);
+                alert("클라우드 저장 중 오류가 발생했습니다.");
+            }
+        };
+
+        window.getAppData = () => appData;
+    </script>
+
+    <!-- 애플리케이션 로직 -->
+    <script>
+        const APP_VERSION = '1.3.0';
+
+        function checkAppVersion() {
+            const savedVersion = localStorage.getItem('sarang_app_version');
+            if (savedVersion && savedVersion !== APP_VERSION) {
+                if (confirm("새로운 업데이트가 있습니다! 최신 버전으로 새로고침하여 적용하시겠습니까?")) {
+                    localStorage.setItem('sarang_app_version', APP_VERSION);
+                    window.location.reload(true);
+                }
+            } else if (!savedVersion) {
+                localStorage.setItem('sarang_app_version', APP_VERSION);
+            }
+        }
+
+        // 봉사연도 계산 유틸리티 (9월 시작 ~ 이듬해 8월)
+        // 예: 2026-09 -> 2027 봉사연도, 2027-08 -> 2027 봉사연도
+        function getServiceYear(yearMonthStr) {
+            if (!yearMonthStr) return 2027;
+            const [y, m] = yearMonthStr.split('-').map(Number);
+            return m >= 9 ? y + 1 : y;
+        }
+
         function initApp() {
-            checkAppVersion(); // 버전 체크 실행
-            loadData();
-            
+            checkAppVersion();
             const now = new Date();
             const yearMonth = now.toISOString().slice(0, 7);
             document.getElementById('attendance-month-input').value = yearMonth;
             document.getElementById('volunteer-month-input').value = yearMonth;
             document.getElementById('pub-month-input').value = yearMonth;
 
+            updateServiceYearBadge(yearMonth);
             updateHeaderTime();
             setInterval(updateHeaderTime, 1000);
-
             initAttendanceSessions();
+        }
+
+        function updateServiceYearBadge(yearMonth) {
+            const sy = getServiceYear(yearMonth);
+            const badge = document.getElementById('service-year-badge');
+            const label = document.getElementById('current-sy-label');
+            if (badge) badge.innerText = `${sy} 봉사연도`;
+            if (label) label.innerText = `${sy} 봉사연도 (${yearMonth})`;
+        }
+
+        function onVolunteerMonthChanged() {
+            const ym = document.getElementById('volunteer-month-input').value;
+            updateServiceYearBadge(ym);
+            renderVolunteerTable();
+        }
+
+        function renderAllViews() {
             renderGroupTable();
             renderAttendanceCheck();
             renderVolunteerTable();
             renderPublicationTable();
         }
 
-        function loadData() {
-            const saved = localStorage.getItem('sarang_group_app_data');
-            if (saved) {
-                try {
-                    appData = JSON.parse(saved);
-                } catch (e) {
-                    console.error("Data parse error", e);
-                }
-            }
-            if (!appData.members || appData.members.length === 0) {
-                appData.members = JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
-            } else {
-                appData.members.forEach(m => {
-                    if (!m.gender) m.gender = "형제";
-                    if (!m.roles) {
-                        m.roles = m.role && m.role !== "해당없음" ? [m.role] : [];
-                    }
-                });
-            }
-            if (!appData.pubTypes || appData.pubTypes.length === 0) {
-                appData.pubTypes = [...DEFAULT_PUB_TYPES];
-            }
-        }
-
-        function saveData() {
-            localStorage.setItem('sarang_group_app_data', JSON.stringify(appData));
-        }
-
         function updateHeaderTime() {
             const now = new Date();
             const days = ['일', '월', '화', '수', '목', '금', '토'];
-            const str = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} (${days[now.getDay()]}요일) ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-            document.getElementById('header-datetime').innerText = str;
+            const str = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} (${days[now.getDay()]}) ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            const el = document.getElementById('header-datetime');
+            if (el) el.innerText = str;
         }
 
         function switchTab(tabId) {
@@ -434,31 +537,26 @@
             nav.classList.remove('text-slate-400', 'font-medium');
             nav.classList.add('text-indigo-600', 'font-bold');
 
-            if (tabId === 'attendance') {
-                renderAttendanceCheck();
-            } else if (tabId === 'volunteer') {
-                renderVolunteerTable();
-            } else if (tabId === 'publication') {
-                renderPublicationTable();
-            }
+            if (tabId === 'attendance') renderAttendanceCheck();
+            else if (tabId === 'volunteer') renderVolunteerTable();
+            else if (tabId === 'publication') renderPublicationTable();
         }
 
+        // 1. 성원 명단
         function renderGroupTable() {
             const tbody = document.getElementById('member-table-body');
             tbody.innerHTML = '';
+            const appData = window.getAppData();
+            if (!appData || !appData.members) return;
 
             appData.members.forEach((m, idx) => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition text-slate-700";
                 
                 let genderBadge = '';
-                if (m.gender === '형제') {
-                    genderBadge = '<span class="px-2 py-0.5 text-[11px] rounded-full font-medium bg-blue-100 text-blue-700">형제</span>';
-                } else if (m.gender === '자매') {
-                    genderBadge = '<span class="px-2 py-0.5 text-[11px] rounded-full font-medium bg-pink-100 text-pink-700">자매</span>';
-                } else {
-                    genderBadge = '<span class="px-2 py-0.5 text-[11px] rounded-full font-medium bg-amber-100 text-amber-700">자녀</span>';
-                }
+                if (m.gender === '형제') genderBadge = '<span class="px-2 py-0.5 text-[11px] rounded-full font-medium bg-blue-100 text-blue-700">형제</span>';
+                else if (m.gender === '자매') genderBadge = '<span class="px-2 py-0.5 text-[11px] rounded-full font-medium bg-pink-100 text-pink-700">자매</span>';
+                else genderBadge = '<span class="px-2 py-0.5 text-[11px] rounded-full font-medium bg-amber-100 text-amber-700">자녀</span>';
 
                 let rolesHTML = '';
                 if (!m.roles || m.roles.length === 0) {
@@ -466,7 +564,7 @@
                 } else {
                     rolesHTML = m.roles.map(r => {
                         let bg = 'bg-slate-100 text-slate-600';
-                        if (r === '파이오니아') bg = 'bg-indigo-100 text-indigo-700';
+                        if (r === '파이오니아') bg = 'bg-indigo-100 text-indigo-700 font-bold';
                         else if (r === '장로') bg = 'bg-purple-100 text-purple-700';
                         else if (r === '봉사의 종') bg = 'bg-emerald-100 text-emerald-700';
                         else if (r === '병교위') bg = 'bg-amber-100 text-amber-700';
@@ -481,8 +579,8 @@
                     <td class="p-3">${rolesHTML}</td>
                     <td class="p-3 text-xs text-slate-500">${m.memo || '-'}</td>
                     <td class="p-3 text-center">
-                        <button onclick="openMemberModal('${m.name}')" class="text-indigo-600 hover:text-indigo-800 p-1 mr-1" title="수정"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteMember('${m.name}')" class="text-rose-500 hover:text-rose-700 p-1" title="삭제"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="openMemberModal('${m.name}')" class="text-indigo-600 hover:text-indigo-800 p-1 mr-1"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteMember('${m.name}')" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -499,6 +597,7 @@
             const memoInput = document.getElementById('modal-member-memo');
 
             roleCheckboxes.forEach(cb => cb.checked = false);
+            const appData = window.getAppData();
 
             if (name) {
                 const member = appData.members.find(m => m.name === name);
@@ -531,6 +630,7 @@
             const name = document.getElementById('modal-member-name').value.trim();
             const gender = document.getElementById('modal-member-gender').value;
             const memo = document.getElementById('modal-member-memo').value.trim();
+            const appData = window.getAppData();
             
             const roles = [];
             document.querySelectorAll('input[name="modal-roles"]:checked').forEach(cb => {
@@ -544,9 +644,7 @@
 
             if (origName) {
                 const idx = appData.members.findIndex(m => m.name === origName);
-                if (idx !== -1) {
-                    appData.members[idx] = { name, gender, roles, memo };
-                }
+                if (idx !== -1) appData.members[idx] = { name, gender, roles, memo };
             } else {
                 if (appData.members.some(m => m.name === name)) {
                     alert("이미 존재하는 성원 이름입니다.");
@@ -555,19 +653,19 @@
                 appData.members.push({ name, gender, roles, memo });
             }
 
-            saveData();
+            window.saveDataToCloud();
             closeMemberModal();
-            renderGroupTable();
         }
 
         function deleteMember(name) {
             if (confirm(`"${name}" 성원을 삭제하시겠습니까?`)) {
+                const appData = window.getAppData();
                 appData.members = appData.members.filter(m => m.name !== name);
-                saveData();
-                renderGroupTable();
+                window.saveDataToCloud();
             }
         }
 
+        // 2. 집회 참석
         function generateRecentSessions() {
             let curr = new Date();
             curr.setDate(curr.getDate() - 30);
@@ -577,13 +675,8 @@
             let list = [];
             while (curr <= end) {
                 const day = curr.getDay();
-                if (day === 5) {
-                    let dateStr = `${curr.getFullYear()}-${String(curr.getMonth()+1).padStart(2,'0')}-${String(curr.getDate()).padStart(2,'0')} (금 19:30)`;
-                    list.push(dateStr);
-                } else if (day === 0) {
-                    let dateStr = `${curr.getFullYear()}-${String(curr.getMonth()+1).padStart(2,'0')}-${String(curr.getDate()).padStart(2,'0')} (일 13:00)`;
-                    list.push(dateStr);
-                }
+                if (day === 5) list.push(`${curr.getFullYear()}-${String(curr.getMonth()+1).padStart(2,'0')}-${String(curr.getDate()).padStart(2,'0')} (금 19:30)`);
+                else if (day === 0) list.push(`${curr.getFullYear()}-${String(curr.getMonth()+1).padStart(2,'0')}-${String(curr.getDate()).padStart(2,'0')} (일 13:00)`);
                 curr.setDate(curr.getDate() + 1);
             }
             return list.reverse();
@@ -593,7 +686,6 @@
             const select = document.getElementById('attendance-session-select');
             const sessions = generateRecentSessions();
             select.innerHTML = '';
-
             const now = new Date();
             let closestSession = sessions[0];
             let minDiff = Infinity;
@@ -646,10 +738,11 @@
             const session = document.getElementById('attendance-session-select').value;
             const tbody = document.getElementById('attendance-check-tbody');
             tbody.innerHTML = '';
+            const appData = window.getAppData();
+            if (!appData || !appData.members) return;
 
-            if (!appData.attendance[session]) {
-                appData.attendance[session] = {};
-            }
+            if (!appData.attendance) appData.attendance = {};
+            if (!appData.attendance[session]) appData.attendance[session] = {};
 
             appData.members.forEach((m, idx) => {
                 if (!appData.attendance[session][m.name]) {
@@ -670,7 +763,7 @@
                         </div>
                     </td>
                     <td class="p-3">
-                        <input type="text" value="${record.reason || ''}" placeholder="불참 사유 입력" oninput="setAttendanceReason('${session}', '${m.name}', this.value)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 ${record.status === '불참' ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 text-slate-400'}">
+                        <input type="text" value="${record.reason || ''}" placeholder="불참 사유 입력" onchange="setAttendanceReason('${session}', '${m.name}', this.value)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 ${record.status === '불참' ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 text-slate-400'}">
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -678,26 +771,28 @@
         }
 
         function setAttendanceStatus(session, name, status) {
+            const appData = window.getAppData();
             if (!appData.attendance[session]) appData.attendance[session] = {};
             if (!appData.attendance[session][name]) appData.attendance[session][name] = { status: '현장', reason: '' };
             appData.attendance[session][name].status = status;
-            saveData();
-            renderAttendanceCheck();
+            window.saveDataToCloud();
         }
 
         function setAttendanceReason(session, name, reason) {
+            const appData = window.getAppData();
             if (!appData.attendance[session]) appData.attendance[session] = {};
             if (!appData.attendance[session][name]) appData.attendance[session][name] = { status: '현장', reason: '' };
             appData.attendance[session][name].reason = reason;
-            saveData();
+            window.saveDataToCloud();
         }
 
         function renderAttendanceMatrix() {
             const ym = document.getElementById('attendance-month-input').value;
             document.getElementById('matrix-month-title').innerText = `${ym} 월별 출석 현황`;
+            const appData = window.getAppData();
+            if (!appData) return;
 
-            const allSessions = Object.keys(appData.attendance).filter(s => s.startsWith(ym)).sort();
-
+            const allSessions = Object.keys(appData.attendance || {}).filter(s => s.startsWith(ym)).sort();
             const thead = document.getElementById('matrix-thead');
             const tbody = document.getElementById('matrix-tbody');
             thead.innerHTML = '';
@@ -733,7 +828,8 @@
 
         function exportAttendanceCSV() {
             const ym = document.getElementById('attendance-month-input').value;
-            const allSessions = Object.keys(appData.attendance).filter(s => s.startsWith(ym)).sort();
+            const appData = window.getAppData();
+            const allSessions = Object.keys(appData.attendance || {}).filter(s => s.startsWith(ym)).sort();
             
             let csvContent = "\uFEFFNo,성원명,구분,임명," + allSessions.join(",") + "\n";
             appData.members.forEach((m, idx) => {
@@ -755,19 +851,20 @@
             URL.revokeObjectURL(url);
         }
 
+        // 3. 월별 봉사 보고 및 통계
         function renderVolunteerTable() {
             const ym = document.getElementById('volunteer-month-input').value;
-            document.getElementById('volunteer-image-date').innerText = `보고 월: ${ym}`;
             const tbody = document.getElementById('volunteer-tbody');
             tbody.innerHTML = '';
+            const appData = window.getAppData();
+            if (!appData || !appData.members) return;
 
-            if (!appData.volunteer[ym]) {
-                appData.volunteer[ym] = {};
-            }
+            if (!appData.volunteer) appData.volunteer = {};
+            if (!appData.volunteer[ym]) appData.volunteer[ym] = {};
 
             appData.members.forEach((m, idx) => {
                 if (!appData.volunteer[ym][m.name]) {
-                    appData.volunteer[ym][m.name] = { hours: '', participated: false, study: '', memo: '' };
+                    appData.volunteer[ym][m.name] = { hours: '', creditHours: '', participated: false, study: '', memo: '' };
                 }
                 const v = appData.volunteer[ym][m.name];
                 const isPioneer = m.roles && m.roles.includes('파이오니아');
@@ -776,36 +873,46 @@
                 tr.className = "hover:bg-slate-50 transition";
                 
                 let inputCellHTML = '';
+                let creditCellHTML = '';
+
                 if (isPioneer) {
                     inputCellHTML = `
                         <div class="flex items-center gap-1">
-                            <input type="number" min="0" step="0.5" value="${v.hours || ''}" oninput="setVolunteerData('${ym}', '${m.name}', 'hours', this.value)" class="w-16 sm:w-20 border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="시간">
-                            <span class="text-xs text-slate-500">시간</span>
+                            <input type="number" min="0" step="0.5" value="${v.hours || ''}" onchange="setVolunteerData('${ym}', '${m.name}', 'hours', this.value)" class="w-16 border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-center font-bold text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="0">
+                            <span class="text-xs text-slate-500">h</span>
+                        </div>
+                    `;
+                    creditCellHTML = `
+                        <div class="flex items-center gap-1">
+                            <input type="number" min="0" step="0.5" value="${v.creditHours || ''}" onchange="setVolunteerData('${ym}', '${m.name}', 'creditHours', this.value)" class="w-16 border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-center text-amber-700 bg-amber-50/50 focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="0">
+                            <span class="text-xs text-slate-500">h</span>
                         </div>
                     `;
                 } else {
                     inputCellHTML = `
                         <label class="flex items-center gap-2 cursor-pointer select-none">
                             <input type="checkbox" ${v.participated ? 'checked' : ''} onchange="setVolunteerData('${ym}', '${m.name}', 'participated', this.checked)" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
-                            <span class="text-xs font-medium text-slate-700">봉사 참여</span>
+                            <span class="text-xs font-semibold ${v.participated ? 'text-indigo-600' : 'text-slate-400'}">봉사 참여</span>
                         </label>
                     `;
+                    creditCellHTML = `<span class="text-xs text-slate-300">-</span>`;
                 }
 
-                let roleBadgeStr = m.roles && m.roles.length > 0 ? m.roles.join(', ') : '해당없음';
+                let roleBadgeStr = m.roles && m.roles.length > 0 ? m.roles.join(', ') : '성원';
 
                 tr.innerHTML = `
                     <td class="p-3 text-center text-xs text-slate-400">${idx + 1}</td>
                     <td class="p-3">
-                        <div class="font-semibold text-slate-700">${m.name}</div>
-                        <span class="text-[10px] px-1.5 py-0.2 rounded font-medium ${isPioneer ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-500'}">${roleBadgeStr}</span>
+                        <div class="font-semibold text-slate-800">${m.name}</div>
+                        <span class="text-[10px] px-1.5 py-0.2 rounded font-medium ${isPioneer ? 'bg-indigo-100 text-indigo-700 font-bold' : 'bg-slate-100 text-slate-500'}">${roleBadgeStr}</span>
                     </td>
                     <td class="p-3">${inputCellHTML}</td>
+                    <td class="p-3">${creditCellHTML}</td>
                     <td class="p-3">
-                        <input type="text" value="${v.study || ''}" oninput="setVolunteerData('${ym}', '${m.name}', 'study', this.value)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="연구 성원명/건수">
+                        <input type="text" value="${v.study || ''}" onchange="setVolunteerData('${ym}', '${m.name}', 'study', this.value)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="연구">
                     </td>
                     <td class="p-3">
-                        <input type="text" value="${v.memo || ''}" oninput="setVolunteerData('${ym}', '${m.name}', 'memo', this.value)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="비고 입력">
+                        <input type="text" value="${v.memo || ''}" onchange="setVolunteerData('${ym}', '${m.name}', 'memo', this.value)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="비고">
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -813,17 +920,159 @@
         }
 
         function setVolunteerData(ym, name, field, value) {
+            const appData = window.getAppData();
             if (!appData.volunteer[ym]) appData.volunteer[ym] = {};
-            if (!appData.volunteer[ym][name]) appData.volunteer[ym][name] = { hours: '', participated: false, study: '', memo: '' };
+            if (!appData.volunteer[ym][name]) appData.volunteer[ym][name] = { hours: '', creditHours: '', participated: false, study: '', memo: '' };
             appData.volunteer[ym][name][field] = value;
-            saveData();
+            window.saveDataToCloud();
         }
 
+        // 파이오니아 누적 통계 합산 (3개월 / 6개월 / 1년-봉사연도 전체)
+        function calculatePioneerStats(range) {
+            const appData = window.getAppData();
+            if (!appData || !appData.members) return;
+
+            const currentYM = document.getElementById('volunteer-month-input').value; // YYYY-MM
+            const currentSY = getServiceYear(currentYM);
+
+            // 합산 대상 월 목록 생성
+            let targetMonths = [];
+            const [curY, curM] = currentYM.split('-').map(Number);
+
+            if (range === 'year') {
+                // 봉사연도 1년치: (SY-1년) 9월부터 (SY년) 8월까지
+                const startYear = currentSY - 1;
+                for (let m = 9; m <= 12; m++) targetMonths.push(`${startYear}-${String(m).padStart(2, '0')}`);
+                for (let m = 1; m <= 8; m++) targetMonths.push(`${currentSY}-${String(m).padStart(2, '0')}`);
+            } else {
+                // 최근 N개월 (현재 선택 월 포함 이전 N개월)
+                let y = curY;
+                let m = curM;
+                for (let i = 0; i < range; i++) {
+                    targetMonths.push(`${y}-${String(m).padStart(2, '0')}`);
+                    m--;
+                    if (m === 0) { m = 12; y--; }
+                }
+            }
+
+            const pioneers = appData.members.filter(m => m.roles && m.roles.includes('파이오니아'));
+            const statsBox = document.getElementById('pioneer-stats-box');
+            const statsTitle = document.getElementById('pioneer-stats-title');
+            const statsContent = document.getElementById('pioneer-stats-content');
+
+            const rangeText = range === 'year' ? `${currentSY} 봉사연도 전체 (9월~8월)` : `최근 ${range}개월 누적 (${targetMonths[targetMonths.length-1]} ~ ${targetMonths[0]})`;
+            statsTitle.innerHTML = `<i class="fa-solid fa-award text-amber-500"></i> 파이오니아 시간 합산 현황 <span class="text-xs font-normal text-slate-500 ml-1">(${rangeText})</span>`;
+
+            statsContent.innerHTML = '';
+
+            pioneers.forEach(p => {
+                let totalActual = 0;
+                let totalCredit = 0;
+                let activeMonthsCount = 0;
+
+                targetMonths.forEach(ym => {
+                    const rec = appData.volunteer && appData.volunteer[ym] && appData.volunteer[ym][p.name];
+                    if (rec) {
+                        const h = parseFloat(rec.hours) || 0;
+                        const ch = parseFloat(rec.creditHours) || 0;
+                        totalActual += h;
+                        totalCredit += ch;
+                        if (h > 0 || ch > 0) activeMonthsCount++;
+                    }
+                });
+
+                const grandTotal = totalActual + totalCredit;
+                
+                // 목표 시간 계산 (월 50시간 기준)
+                const targetHours = (range === 'year') ? 600 : range * 50;
+                const achievementRate = Math.min(100, Math.round((grandTotal / targetHours) * 100));
+
+                const card = document.createElement('div');
+                card.className = "bg-white p-3 rounded-lg border border-indigo-100 shadow-sm space-y-1.5";
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-slate-800 text-sm">${p.name}</span>
+                        <span class="text-xs font-bold ${grandTotal >= targetHours ? 'text-emerald-600' : 'text-indigo-600'}">${grandTotal} 시간</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 flex justify-between">
+                        <span>봉사: ${totalActual}h / 고려: ${totalCredit}h</span>
+                        <span>목표: ${targetHours}h (${achievementRate}%)</span>
+                    </div>
+                    <!-- 진행도 바 -->
+                    <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                        <div class="bg-indigo-600 h-2 rounded-full transition-all" style="width: ${achievementRate}%"></div>
+                    </div>
+                `;
+                statsContent.appendChild(card);
+            });
+
+            statsBox.classList.remove('hidden');
+        }
+
+        // ★ 스마트폰 최적화 깔끔한 리포트 이미지 저장 (이름/봉사시간/연구/비고만 캡처)
+        function downloadCleanReportImage() {
+            const ym = document.getElementById('volunteer-month-input').value;
+            const sy = getServiceYear(ym);
+            const appData = window.getAppData();
+            if (!appData || !appData.members) return;
+
+            const template = document.getElementById('clean-image-template');
+            document.getElementById('card-sy-text').innerText = `${sy} 봉사연도`;
+            document.getElementById('card-month-title').innerText = `${ym} 봉사 보고`;
+            document.getElementById('card-gen-date').innerText = new Date().toLocaleDateString('ko-KR');
+
+            const tbody = document.getElementById('card-table-body');
+            tbody.innerHTML = '';
+
+            const volData = (appData.volunteer && appData.volunteer[ym]) || {};
+
+            appData.members.forEach((m, idx) => {
+                const v = volData[m.name] || {};
+                const isPioneer = m.roles && m.roles.includes('파이오니아');
+
+                let timeOrStatus = "";
+                if (isPioneer) {
+                    const h = v.hours ? `${v.hours}h` : '0h';
+                    const ch = v.creditHours ? ` (고려:${v.creditHours}h)` : '';
+                    timeOrStatus = `<span class="font-bold text-indigo-600">${h}</span>${ch}`;
+                } else {
+                    timeOrStatus = v.participated 
+                        ? `<span class="font-semibold text-emerald-600">참여</span>` 
+                        : `<span class="text-slate-400">미참여</span>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = idx % 2 === 1 ? 'bg-slate-50/50' : 'bg-white';
+                tr.innerHTML = `
+                    <td class="p-2 text-center text-slate-400">${idx + 1}</td>
+                    <td class="p-2 font-bold text-slate-800">${m.name}</td>
+                    <td class="p-2 text-center text-slate-700">${timeOrStatus}</td>
+                    <td class="p-2 text-center text-slate-600">${v.study || '-'}</td>
+                    <td class="p-2 text-slate-500">${v.memo || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // html2canvas로 고화질(scale: 3) 캡처
+            html2canvas(template, { scale: 3, backgroundColor: '#ffffff' }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `사랑집단_봉사보고_${ym}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }).catch(err => {
+                console.error(err);
+                alert("이미지 생성 중 오류가 발생했습니다.");
+            });
+        }
+
+        // 봉사보고 문자 복사
         function shareVolunteerReportSMS() {
             const ym = document.getElementById('volunteer-month-input').value;
-            const volData = appData.volunteer[ym] || {};
+            const sy = getServiceYear(ym);
+            const appData = window.getAppData();
+            const volData = (appData && appData.volunteer && appData.volunteer[ym]) || {};
 
-            let reportText = `[사랑 집단 ${ym} 봉사 보고]\n\n`;
+            let reportText = `[사랑 집단 ${sy}봉사연도 ${ym} 봉사 보고]\n\n`;
 
             appData.members.forEach((m, idx) => {
                 const v = volData[m.name] || {};
@@ -832,14 +1081,14 @@
                 let activityStr = "";
                 if (isPioneer) {
                     let hrs = v.hours ? `${v.hours}시간` : "0시간";
-                    activityStr = `봉사시간: ${hrs}`;
+                    let credit = v.creditHours ? ` (고려시간: ${v.creditHours}시간)` : "";
+                    activityStr = `봉사시간: ${hrs}${credit}`;
                 } else {
                     activityStr = v.participated ? "봉사 참여" : "미참여";
                 }
 
                 let studyStr = v.study ? `연구: ${v.study}` : "";
                 let memoStr = v.memo ? `비고: ${v.memo}` : "";
-
                 let details = [activityStr, studyStr, memoStr].filter(Boolean).join(" | ");
                 reportText += `${idx + 1}. ${m.name} (${m.gender}) : ${details}\n`;
             });
@@ -847,9 +1096,7 @@
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(reportText).then(() => {
                     alert("봉사 보고 내용이 클립보드에 복사되었습니다!\n문자나 카카오톡에 붙여넣기 하세요.");
-                }).catch(() => {
-                    fallbackCopyText(reportText);
-                });
+                }).catch(() => fallbackCopyText(reportText));
             } else {
                 fallbackCopyText(reportText);
             }
@@ -862,57 +1109,38 @@
             document.body.appendChild(textarea);
             textarea.focus();
             textarea.select();
-            try {
-                document.execCommand('copy');
-                alert("봉사 보고 내용이 복사되었습니다!");
-            } catch (err) {
-                alert("복사에 실패했습니다.");
-            }
+            document.execCommand('copy');
+            alert("봉사 보고 내용이 복사되었습니다!");
             document.body.removeChild(textarea);
         }
 
-        function downloadVolunteerReportImage() {
-            const ym = document.getElementById('volunteer-month-input').value;
-            const captureArea = document.getElementById('volunteer-capture-area');
-
-            html2canvas(captureArea, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `사랑집단_봉사보고_${ym}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            }).catch(err => {
-                alert("이미지 저장 중 오류가 발생했습니다.");
-                console.error(err);
-            });
-        }
-
+        // 4. 출판물
         function renderPublicationTable() {
             const ym = document.getElementById('pub-month-input').value;
             const thead = document.getElementById('pub-thead');
             const tbody = document.getElementById('pub-tbody');
             thead.innerHTML = '';
             tbody.innerHTML = '';
+            const appData = window.getAppData();
+            if (!appData || !appData.members) return;
 
-            if (!appData.publication[ym]) {
-                appData.publication[ym] = {};
-            }
+            if (!appData.publication) appData.publication = {};
+            if (!appData.publication[ym]) appData.publication[ym] = {};
 
             let headerHTML = `<tr class="bg-slate-100 border-b border-slate-200 text-slate-600 uppercase tracking-wider">
                 <th class="p-3 w-12 text-center">No</th>
                 <th class="p-3 w-28">성원명</th>`;
-            appData.pubTypes.forEach(pt => {
+            (appData.pubTypes || []).forEach(pt => {
                 headerHTML += `<th class="p-3 text-center w-28">${pt}</th>`;
             });
             headerHTML += `</tr>`;
             thead.innerHTML = headerHTML;
 
             appData.members.forEach((m, idx) => {
-                if (!appData.publication[ym][m.name]) {
-                    appData.publication[ym][m.name] = {};
-                }
+                if (!appData.publication[ym][m.name]) appData.publication[ym][m.name] = {};
                 let trHTML = `<td class="p-3 text-center text-xs text-slate-400">${idx+1}</td><td class="p-3 font-semibold text-slate-700">${m.name}</td>`;
                 
-                appData.pubTypes.forEach(pt => {
+                (appData.pubTypes || []).forEach(pt => {
                     let count = appData.publication[ym][m.name][pt] || 0;
                     trHTML += `
                         <td class="p-3 text-center">
@@ -933,13 +1161,12 @@
         }
 
         function updatePubCount(ym, name, pt, delta) {
+            const appData = window.getAppData();
             if (!appData.publication[ym]) appData.publication[ym] = {};
             if (!appData.publication[ym][name]) appData.publication[ym][name] = {};
             let current = appData.publication[ym][name][pt] || 0;
-            let next = Math.max(0, current + delta);
-            appData.publication[ym][name][pt] = next;
-            saveData();
-            renderPublicationTable();
+            appData.publication[ym][name][pt] = Math.max(0, current + delta);
+            window.saveDataToCloud();
         }
 
         function openPubTypeModal() {
@@ -955,7 +1182,8 @@
         function renderPubTypeList() {
             const listDiv = document.getElementById('pub-type-list');
             listDiv.innerHTML = '';
-            appData.pubTypes.forEach((pt, idx) => {
+            const appData = window.getAppData();
+            (appData.pubTypes || []).forEach((pt, idx) => {
                 const item = document.createElement('div');
                 item.className = "flex justify-between items-center p-2.5 bg-white text-xs sm:text-sm";
                 item.innerHTML = `
@@ -970,17 +1198,19 @@
             const input = document.getElementById('new-pub-type-input');
             const val = input.value.trim();
             if (!val) return;
+            const appData = window.getAppData();
             if (appData.pubTypes.includes(val)) {
                 alert("이미 존재하는 출판물 종류입니다.");
                 return;
             }
             appData.pubTypes.push(val);
             input.value = '';
-            saveData();
+            window.saveDataToCloud();
             renderPubTypeList();
         }
 
         function deletePubType(idx) {
+            const appData = window.getAppData();
             if (appData.pubTypes.length <= 1) {
                 alert("최소 1개의 출판물 종류는 유지되어야 합니다.");
                 return;
@@ -988,60 +1218,48 @@
             const target = appData.pubTypes[idx];
             if (confirm(`"${target}" 종류를 삭제하시겠습니까?`)) {
                 appData.pubTypes.splice(idx, 1);
-                saveData();
+                window.saveDataToCloud();
                 renderPubTypeList();
             }
         }
 
+        // 5. 초기화 및 백업
         function resetToDefaultData() {
-            if (confirm("모든 데이터를 기본 설정으로 초기화하시겠습니까?")) {
-                appData.members = JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
-                appData.pubTypes = [...DEFAULT_PUB_TYPES];
+            if (confirm("클라우드의 모든 데이터를 기본 초기 상태로 리셋하시겠습니까?")) {
+                const appData = window.getAppData();
+                appData.members = [
+                    { name: "이지후", gender: "형제", roles: ["파이오니아"], memo: "" },
+                    { name: "정수빈", gender: "자매", roles: ["파이오니아"], memo: "" },
+                    { name: "서현우", gender: "형제", roles: ["파이오니아"], memo: "" },
+                    { name: "구은희", gender: "자매", roles: ["파이오니아"], memo: "" },
+                    { name: "서리우", gender: "자녀", roles: [], memo: "" },
+                    { name: "서리아", gender: "자녀", roles: [], memo: "" },
+                    { name: "김성용", gender: "형제", roles: [], memo: "" },
+                    { name: "김에녹", gender: "자매", roles: [], memo: "" },
+                    { name: "김사랑", gender: "자매", roles: [], memo: "" },
+                    { name: "조일성", gender: "형제", roles: ["파이오니아"], memo: "" },
+                    { name: "유동석", gender: "형제", roles: [], memo: "" },
+                    { name: "이일천", gender: "자매", roles: ["파이오니아"], memo: "" },
+                    { name: "권숙이", gender: "자매", roles: ["파이오니아"], memo: "" },
+                    { name: "유금년", gender: "자매", roles: [], memo: "" },
+                    { name: "김명분", gender: "자매", roles: [], memo: "" }
+                ];
+                appData.pubTypes = ["연구용", "대형", "집회교재", "배부용"];
                 appData.attendance = {};
                 appData.volunteer = {};
                 appData.publication = {};
-                saveData();
-                alert("초기화되었습니다.");
-                renderGroupTable();
-                initAttendanceSessions();
-                renderAttendanceCheck();
-                renderVolunteerTable();
-                renderPublicationTable();
+                window.saveDataToCloud();
+                alert("기본 데이터로 초기화되었습니다.");
             }
         }
 
         function exportDataJSON() {
+            const appData = window.getAppData();
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
             dlAnchor.setAttribute("download", `sarang_group_backup_${new Date().toISOString().slice(0,10)}.json`);
             dlAnchor.click();
-        }
-
-        function importDataJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const parsed = JSON.parse(e.target.result);
-                    if (parsed.members && parsed.pubTypes) {
-                        appData = parsed;
-                        saveData();
-                        alert("데이터가 성공적으로 복원되었습니다.");
-                        renderGroupTable();
-                        initAttendanceSessions();
-                        renderAttendanceCheck();
-                        renderVolunteerTable();
-                        renderPublicationTable();
-                    } else {
-                        alert("올바르지 않은 백업 파일 형식입니다.");
-                    }
-                } catch (err) {
-                    alert("JSON 파일을 읽는 중 오류가 발생했습니다.");
-                }
-            };
-            reader.readAsText(file);
         }
 
         window.onload = initApp;
