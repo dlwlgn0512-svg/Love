@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>사랑 집단 통합 관리</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            word-break: keep-all;
+        }
+        input, select, button {
+            font-size: 14px !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen pb-24">
+
+    <!-- 상단 헤더 -->
+    <header class="bg-indigo-600 text-white shadow sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-base sm:text-lg font-bold flex items-center gap-2 truncate">
+                <i class="fa-solid fa-people-group"></i> 사랑 집단 관리 시스템
+            </h1>
+            <div id="header-datetime" class="text-[11px] sm:text-xs text-indigo-200 whitespace-nowrap"></div>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-4 mb-4">
+        
+        <!-- 1. 사랑집단 탭 (엑셀 형식 명단표) -->
+        <section id="tab-group" class="tab-content space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-3">
+                <div>
+                    <h2 class="text-sm sm:text-base font-bold text-slate-700">사랑 집단 성원 명단 (엑셀 형식)</h2>
+                    <p class="text-xs text-slate-500">집단 성원들의 기본 정보와 파이오니아 여부를 표 형태로 관리합니다.</p>
+                </div>
+                <button onclick="openMemberModal()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center justify-center gap-1 shadow">
+                    <i class="fa-solid fa-user-plus"></i> 성원 추가
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm whitespace-nowrap sm:whitespace-normal">
+                        <thead>
+                            <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider">
+                                <th class="p-3 text-center w-12">No</th>
+                                <th class="p-3 w-28">이름</th>
+                                <th class="p-3 w-32">구분 (역할)</th>
+                                <th class="p-3">연락처 / 비고</th>
+                                <th class="p-3 text-center w-24">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="member-table-body" class="divide-y divide-slate-200">
+                            <!-- 동적 렌더링 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. 집회참석 탭 -->
+        <section id="tab-attendance" class="tab-content space-y-4 hidden">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                <div>
+                    <h2 class="text-sm sm:text-base font-bold text-slate-700">집회 참석 체크</h2>
+                    <p class="text-xs text-slate-500">금요일 19:30, 일요일 13:00 회차별 참석 및 사유 관리</p>
+                </div>
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <select id="attendance-session-select" onchange="changeAttendanceSession()" class="border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-auto">
+                        <!-- 동적 생성 -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- 월별 통계 보기 토글 / 월 선택 -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <label class="text-xs font-bold text-slate-600 whitespace-nowrap">월별 보기:</label>
+                    <input type="month" id="attendance-month-input" onchange="renderAttendanceMatrix()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1 sm:flex-none">
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="switchAttendanceView('check')" id="btn-view-check" class="flex-1 sm:flex-none px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white shadow">회차별 체크</button>
+                    <button onclick="switchAttendanceView('matrix')" id="btn-view-matrix" class="flex-1 sm:flex-none px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300">월별 현황표</button>
+                </div>
+            </div>
+
+            <!-- 1) 회차별 체크 뷰 -->
+            <div id="view-mode-check" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead>
+                            <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 uppercase tracking-wider">
+                                <th class="p-3 w-12 text-center">No</th>
+                                <th class="p-3 w-28">이름</th>
+                                <th class="p-3 w-48 text-center">참석 여부</th>
+                                <th class="p-3">불참 사유 (불참 시 입력)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-check-tbody" class="divide-y divide-slate-200">
+                            <!-- 동적 렌더링 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2) 월별 매트릭스 뷰 -->
+            <div id="view-mode-matrix" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hidden">
+                <div class="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-600" id="matrix-month-title">월별 출석 현황 매트릭스</span>
+                    <button onclick="exportAttendanceCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1">
+                        <i class="fa-solid fa-file-excel"></i> CSV 내보내기
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs whitespace-nowrap">
+                        <thead id="matrix-thead" class="bg-slate-100 border-b border-slate-200 text-slate-600">
+                            <!-- 동적 생성 -->
+                        </thead>
+                        <tbody id="matrix-tbody" class="divide-y divide-slate-200">
+                            <!-- 동적 생성 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. 봉사보고 탭 -->
+        <section id="tab-volunteer" class="tab-content space-y-4 hidden">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h2 class="text-sm sm:text-base font-bold text-slate-700">월별 봉사 보고</h2>
+                    <p class="text-xs text-slate-500">파이오니아(시간 기록) 및 일반 성원(참석 체크), 연구 및 비고 관리</p>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <label class="text-xs font-bold text-slate-600 whitespace-nowrap">보고 월:</label>
+                    <input type="month" id="volunteer-month-input" onchange="renderVolunteerTable()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1 sm:flex-none">
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm whitespace-nowrap sm:whitespace-normal">
+                        <thead>
+                            <tr class="bg-slate-100 border-b border-slate-200 text-slate-600 uppercase tracking-wider">
+                                <th class="p-3 w-12 text-center">No</th>
+                                <th class="p-3 w-28">이름 (구분)</th>
+                                <th class="p-3 w-36">봉사 시간/참여</th>
+                                <th class="p-3 w-36">연구 (건수/이름)</th>
+                                <th class="p-3">비고</th>
+                            </tr>
+                        </thead>
+                        <tbody id="volunteer-tbody" class="divide-y divide-slate-200">
+                            <!-- 동적 렌더링 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. 출판물 탭 -->
+        <section id="tab-publication" class="tab-content space-y-4 hidden">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h2 class="text-sm sm:text-base font-bold text-slate-700">출판물 신청 현황</h2>
+                    <p class="text-xs text-slate-500">성원별 출판물 신청 내역을 관리합니다.</p>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+                    <input type="month" id="pub-month-input" onchange="renderPublicationTable()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button onclick="openPubTypeModal()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1 shadow whitespace-nowrap">
+                        <i class="fa-solid fa-gear"></i> 종류 관리
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs sm:text-sm whitespace-nowrap">
+                        <thead id="pub-thead">
+                            <!-- 동적 렌더링 -->
+                        </thead>
+                        <tbody id="pub-tbody" class="divide-y divide-slate-200">
+                            <!-- 동적 렌더링 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. 설정 탭 -->
+        <section id="tab-settings" class="tab-content space-y-4 hidden">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-sm sm:text-base font-bold text-slate-700 mb-1">데이터 및 설정 관리</h2>
+                <p class="text-xs text-slate-500 mb-4">초기 데이터 복원 및 백업을 수행할 수 있습니다.</p>
+                
+                <div class="flex flex-col sm:flex-row flex-wrap gap-3">
+                    <button onclick="resetToDefaultData()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow">
+                        <i class="fa-solid fa-rotate-right"></i> 기본 데이터로 초기화
+                    </button>
+                    <button onclick="exportDataJSON()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow">
+                        <i class="fa-solid fa-download"></i> 데이터 백업 (JSON)
+                    </button>
+                    <label class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow cursor-pointer">
+                        <i class="fa-solid fa-upload"></i> 데이터 복원 (JSON)
+                        <input type="file" id="import-file" accept=".json" onchange="importDataJSON(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 하단 네비게이션 바 -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-40">
+        <div class="max-w-5xl mx-auto flex justify-around items-center h-16">
+            <button onclick="switchTab('group')" id="nav-group" class="nav-btn flex flex-col items-center justify-center flex-1 h-full text-indigo-600 font-bold transition">
+                <i class="fa-solid fa-people-group text-base sm:text-lg mb-1"></i>
+                <span class="text-[10px] sm:text-[11px]">사랑집단</span>
+            </button>
+            <button onclick="switchTab('attendance')" id="nav-attendance" class="nav-btn flex flex-col items-center justify-center flex-1 h-full text-slate-400 hover:text-slate-600 font-medium transition">
+                <i class="fa-solid fa-clipboard-user text-base sm:text-lg mb-1"></i>
+                <span class="text-[10px] sm:text-[11px]">집회참석</span>
+            </button>
+            <button onclick="switchTab('volunteer')" id="nav-volunteer" class="nav-btn flex flex-col items-center justify-center flex-1 h-full text-slate-400 hover:text-slate-600 font-medium transition">
+                <i class="fa-solid fa-hands-holding-child text-base sm:text-lg mb-1"></i>
+                <span class="text-[10px] sm:text-[11px]">봉사보고</span>
+            </button>
+            <button onclick="switchTab('publication')" id="nav-publication" class="nav-btn flex flex-col items-center justify-center flex-1 h-full text-slate-400 hover:text-slate-600 font-medium transition">
+                <i class="fa-solid fa-book-open text-base sm:text-lg mb-1"></i>
+                <span class="text-[10px] sm:text-[11px]">출판물</span>
+            </button>
+            <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center flex-1 h-full text-slate-400 hover:text-slate-600 font-medium transition">
+                <i class="fa-solid fa-gear text-base sm:text-lg mb-1"></i>
+                <span class="text-[10px] sm:text-[11px]">설정</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 모달: 성원 추가/수정 -->
+    <div id="member-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-5 sm:p-6 space-y-4">
+            <h3 id="member-modal-title" class="text-sm sm:text-base font-bold text-slate-800">성원 추가</h3>
+            <input type="hidden" id="modal-member-original-name">
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">이름</label>
+                    <input type="text" id="modal-member-name" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">구분</label>
+                    <select id="modal-member-role" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="파이오니아">파이오니아</option>
+                        <option value="일반성원">일반성원</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">연락처 / 비고</label>
+                    <input type="text" id="modal-member-memo" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="예: 010-0000-0000">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeMemberModal()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300">취소</button>
+                <button onclick="saveMember()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 shadow">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달: 출판물 종류 관리 -->
+    <div id="pub-type-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-5 sm:p-6 space-y-4">
+            <h3 class="text-sm sm:text-base font-bold text-slate-800">출판물 종류 관리</h3>
+            <div class="flex gap-2">
+                <input type="text" id="new-pub-type-input" placeholder="새 출판물 종류 입력" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button onclick="addPubType()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-4 py-2 rounded-lg font-medium shadow whitespace-nowrap">추가</button>
+            </div>
+            <div class="max-h-48 overflow-y-auto border border-slate-200 rounded-lg divide-y divide-slate-200" id="pub-type-list">
+                <!-- 동적 렌더링 -->
+            </div>
+            <div class="flex justify-end pt-2">
+                <button onclick="closePubTypeModal()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 자바스크립트 로직 -->
+    <script>
+        const DEFAULT_MEMBERS = [
+            { name: "이지후", role: "파이오니아", memo: "" },
+            { name: "정수빈", role: "파이오니아", memo: "" },
+            { name: "서현우", role: "파이오니아", memo: "" },
+            { name: "구은희", role: "파이오니아", memo: "" },
+            { name: "서리우", role: "일반성원", memo: "" },
+            { name: "서리아", role: "일반성원", memo: "" },
+            { name: "김성용", role: "일반성원", memo: "" },
+            { name: "김에녹", role: "일반성원", memo: "" },
+            { name: "김사랑", role: "일반성원", memo: "" },
+            { name: "조일성", role: "파이오니아", memo: "" },
+            { name: "유동석", role: "일반성원", memo: "" },
+            { name: "이일천", role: "파이오니아", memo: "" },
+            { name: "권숙이", role: "파이오니아", memo: "" },
+            { name: "유금년", role: "일반성원", memo: "" },
+            { name: "김명분", role: "일반성원", memo: "" }
+        ];
+
+        const DEFAULT_PUB_TYPES = ["연구용", "대형", "집회교재", "배부용"];
+
+        let appData = {
+            members: [],
+            pubTypes: [],
+            attendance: {},
+            volunteer: {},
+            publication: {}
+        };
+
+        function initApp() {
+            loadData();
+            
+            const now = new Date();
+            const yearMonth = now.toISOString().slice(0, 7);
+            document.getElementById('attendance-month-input').value = yearMonth;
+            document.getElementById('volunteer-month-input').value = yearMonth;
+            document.getElementById('pub-month-input').value = yearMonth;
+
+            updateHeaderTime();
+            setInterval(updateHeaderTime, 1000);
+
+            initAttendanceSessions();
+            renderGroupTable();
+            renderAttendanceCheck();
+            renderVolunteerTable();
+            renderPublicationTable();
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('sarang_group_app_data');
+            if (saved) {
+                try {
+                    appData = JSON.parse(saved);
+                } catch (e) {
+                    console.error("Data parse error", e);
+                }
+            }
+            if (!appData.members || appData.members.length === 0) {
+                appData.members = JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
+            }
+            if (!appData.pubTypes || appData.pubTypes.length === 0) {
+                appData.pubTypes = [...DEFAULT_PUB_TYPES];
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('sarang_group_app_data', JSON.stringify(appData));
+        }
+
+        function updateHeaderTime() {
+            const now = new Date();
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            const str = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} (${days[now.getDay()]}요일) ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            document.getElementById('header-datetime').innerText = str;
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('text-indigo-600', 'font-bold');
+                el.classList.add('text-slate-400', 'font-medium');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const nav = document.getElementById(`nav-${tabId}`);
+            nav.classList.remove('text-slate-400', 'font-medium');
+            nav.classList.add('text-indigo-600', 'font-bold');
+
+            if (tabId === 'attendance') {
+                renderAttendanceCheck();
+            } else if (tabId === 'volunteer') {
+                renderVolunteerTable();
+            } else if (tabId === 'publication') {
+                renderPublicationTable();
+            }
+        }
+
+        function renderGroupTable() {
+            const tbody = document.getElementById('member-table-body');
+            tbody.innerHTML = '';
+
+            appData.members.forEach((m, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition text-slate-700";
+                tr.innerHTML = `
+                    <td class="p-3 text-center text-xs text-slate-400">${idx + 1}</td>
+                    <td class="p-3 font-semibold">${m.name}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 text-[11px] rounded-full font-medium ${m.role === '파이오니아' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'}">
+                            ${m.role}
+                        </span>
+                    </td>
+                    <td class="p-3 text-xs text-slate-500">${m.memo || '-'}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="openMemberModal('${m.name}')" class="text-indigo-600 hover:text-indigo-800 p-1 mr-1" title="수정"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteMember('${m.name}')" class="text-rose-500 hover:text-rose-700 p-1" title="삭제"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openMemberModal(name = null) {
+            const modal = document.getElementById('member-modal');
+            const title = document.getElementById('member-modal-title');
+            const origInput = document.getElementById('modal-member-original-name');
+            const nameInput = document.getElementById('modal-member-name');
+            const roleSelect = document.getElementById('modal-member-role');
+            const memoInput = document.getElementById('modal-member-memo');
+
+            if (name) {
+                const member = appData.members.find(m => m.name === name);
+                title.innerText = "성원 정보 수정";
+                origInput.value = name;
+                nameInput.value = member.name;
+                roleSelect.value = member.role;
+                memoInput.value = member.memo || '';
+            } else {
+                title.innerText = "새 성원 추가";
+                origInput.value = "";
+                nameInput.value = "";
+                roleSelect.value = "일반성원";
+                memoInput.value = "";
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeMemberModal() {
+            document.getElementById('member-modal').classList.add('hidden');
+        }
+
+        function saveMember() {
+            const origName = document.getElementById('modal-member-original-name').value;
+            const name = document.getElementById('modal-member-name').value.trim();
+            const role = document.getElementById('modal-member-role').value;
+            const memo = document.getElementById('modal-member-memo').value.trim();
+
+            if (!name) {
+                alert("성원 이름을 입력해주세요.");
+                return;
+            }
+
+            if (origName) {
+                const idx = appData.members.findIndex(m => m.name === origName);
+                if (idx !== -1) {
+                    appData.members[idx] = { name, role, memo };
+                }
+            } else {
+                if (appData.members.some(m => m.name === name)) {
+                    alert("이미 존재하는 성원 이름입니다.");
+                    return;
+                }
+                appData.members.push({ name, role, memo });
+            }
+
+            saveData();
+            closeMemberModal();
+            renderGroupTable();
+        }
+
+        function deleteMember(name) {
+            if (confirm(`"${name}" 성원을 삭제하시겠습니까?`)) {
+                appData.members = appData.members.filter(m => m.name !== name);
+                saveData();
+                renderGroupTable();
+            }
+        }
+
+        function generateRecentSessions() {
+            let curr = new Date();
+            curr.setDate(curr.getDate() - 30);
+            const end = new Date();
+            end.setDate(end.getDate() + 60);
+
+            let list = [];
+            while (curr <= end) {
+                const day = curr.getDay();
+                if (day === 5) {
+                    let dateStr = `${curr.getFullYear()}-${String(curr.getMonth()+1).padStart(2,'0')}-${String(curr.getDate()).padStart(2,'0')} (금 19:30)`;
+                    list.push(dateStr);
+                } else if (day === 0) {
+                    let dateStr = `${curr.getFullYear()}-${String(curr.getMonth()+1).padStart(2,'0')}-${String(curr.getDate()).padStart(2,'0')} (일 13:00)`;
+                    list.push(dateStr);
+                }
+                curr.setDate(curr.getDate() + 1);
+            }
+            return list.reverse();
+        }
+
+        function initAttendanceSessions() {
+            const select = document.getElementById('attendance-session-select');
+            const sessions = generateRecentSessions();
+            select.innerHTML = '';
+
+            const now = new Date();
+            let closestSession = sessions[0];
+            let minDiff = Infinity;
+
+            sessions.forEach(s => {
+                let datePart = s.split(' ')[0];
+                let timePart = s.includes('금') ? '19:30' : '13:00';
+                let sessionDate = new Date(`${datePart}T${timePart}:00`);
+                let diff = Math.abs(now - sessionDate);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestSession = s;
+                }
+            });
+
+            sessions.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.innerText = s;
+                if (s === closestSession) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function changeAttendanceSession() {
+            renderAttendanceCheck();
+        }
+
+        function switchAttendanceView(mode) {
+            const checkDiv = document.getElementById('view-mode-check');
+            const matrixDiv = document.getElementById('view-mode-matrix');
+            const btnCheck = document.getElementById('btn-view-check');
+            const btnMatrix = document.getElementById('btn-view-matrix');
+
+            if (mode === 'check') {
+                checkDiv.classList.remove('hidden');
+                matrixDiv.classList.add('hidden');
+                btnCheck.className = "flex-1 sm:flex-none px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white shadow";
+                btnMatrix.className = "flex-1 sm:flex-none px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300";
+            } else {
+                checkDiv.classList.add('hidden');
+                matrixDiv.classList.remove('hidden');
+                btnMatrix.className = "flex-1 sm:flex-none px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white shadow";
+                btnCheck.className = "flex-1 sm:flex-none px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300";
+                renderAttendanceMatrix();
+            }
+        }
+
+        function renderAttendanceCheck() {
+            const session = document.getElementById('attendance-session-select').value;
+            const tbody = document.getElementById('attendance-check-tbody');
+            tbody.innerHTML = '';
+
+            if (!appData.attendance[session]) {
+                appData.attendance[session] = {};
+            }
+
+            appData.members.forEach((m, idx) => {
+                if (!appData.attendance[session][m.name]) {
+                    appData.attendance[session][m.name] = { status: '현장', reason: '' };
+                }
+                const record = appData.attendance[session][m.name];
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = `
+                    <td class="p-3 text-center text-xs text-slate-400">${idx + 1}</td>
+                    <td class="p-3 font-semibold text-slate-700">${m.name}</td>
+                    <td class="p-3 text-center">
+                        <div class="inline-flex rounded-lg shadow-sm p-0.5 bg-slate-100 text-[11px] sm:text-xs">
+                            <button type="button" onclick="setAttendanceStatus('${session}', '${m.name}', '현장')" class="px-2 py-1 rounded-md font-medium transition ${record.status === '현장' ? 'bg-indigo-600 text-white shadow' : 'text-slate-600 hover:bg-slate-200'}">현장</button>
+                            <button type="button" onclick="setAttendanceStatus('${session}', '${m.name}', '줌')" class="px-2 py-1 rounded-md font-medium transition ${record.status === '줌' ? 'bg-emerald-600 text-white shadow' : 'text-slate-600 hover:bg-slate-200'}">Zoom</button>
+                            <button type="button" onclick="setAttendanceStatus('${session}', '${m.name}', '불참')" class="px-2 py-1 rounded-md font-medium transition ${record.status === '불참' ? 'bg-rose-600 text-white shadow' : 'text-slate-600 hover:bg-slate-200'}">불참</button>
+                        </div>
+                    </td>
+                    <td class="p-3">
+                        <input type="text" value="${record.reason || ''}" placeholder="불참 사유 입력" oninput="setAttendanceReason('${session}', '${m.name}', this.value)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 ${record.status === '불참' ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 text-slate-400'}">
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function setAttendanceStatus(session, name, status) {
+            if (!appData.attendance[session]) appData.attendance[session] = {};
+            if (!appData.attendance[session][name]) appData.attendance[session][name] = { status: '현장', reason: '' };
+            appData.attendance[session][name].status = status;
+            saveData();
+            renderAttendanceCheck();
+        }
+
+        function setAttendanceReason(session, name, reason) {
+            if (!appData.attendance[session]) appData.attendance[session] = {};
+            if (!appData.attendance[session][name]) appData.attendance[session][name] = { status: '현장', reason: '' };
+            appData.attendance[session][name].reason = reason;
+            saveData();
+        }
+
+        function renderAttendanceMatrix() {
+            const ym = document.getElementById('attendance-month-input').value;
+            document.getElementById('matrix-month-title').innerText = `${ym} 월별 출석 현황`;
+
+            const allSessions = Object.keys(appData.attendance).filter(s => s.startsWith(ym)).sort();
+
+            const thead = document.getElementById('matrix-thead');
+            const tbody = document.getElementById('matrix-tbody');
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+
+            let headerHTML = `<tr class="border-b border-slate-200 text-xs"><th class="p-3 w-12 text-center">No</th><th class="p-3 w-28">성원명</th>`;
+            allSessions.forEach(s => {
+                let shortName = s.replace(`(${ym.slice(0,4)})`, '').trim();
+                headerHTML += `<th class="p-3 text-center">${shortName}</th>`;
+            });
+            headerHTML += `</tr>`;
+            thead.innerHTML = headerHTML;
+
+            appData.members.forEach((m, idx) => {
+                let trHTML = `<td class="p-3 text-center text-slate-400">${idx+1}</td><td class="p-3 font-semibold text-slate-700">${m.name}</td>`;
+                allSessions.forEach(s => {
+                    let rec = appData.attendance[s]?.[m.name];
+                    let badge = '-';
+                    let cls = 'text-slate-300';
+                    if (rec) {
+                        if (rec.status === '현장') { badge = '현장'; cls = 'bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.5 rounded'; }
+                        else if (rec.status === '줌') { badge = 'Zoom'; cls = 'bg-emerald-100 text-emerald-700 font-semibold px-2 py-0.5 rounded'; }
+                        else if (rec.status === '불참') { badge = rec.reason ? `불참(${rec.reason})` : '불참'; cls = 'bg-rose-100 text-rose-700 px-2 py-0.5 rounded'; }
+                    }
+                    trHTML += `<td class="p-3 text-center"><span class="${cls}">${badge}</span></td>`;
+                });
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = trHTML;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function exportAttendanceCSV() {
+            const ym = document.getElementById('attendance-month-input').value;
+            const allSessions = Object.keys(appData.attendance).filter(s => s.startsWith(ym)).sort();
+            
+            let csvContent = "\uFEFFNo,성원명,구분," + allSessions.join(",") + "\n";
+            appData.members.forEach((m, idx) => {
+                let row = [idx+1, m.name, m.role];
+                allSessions.forEach(s => {
+                    let rec = appData.attendance[s]?.[m.name];
+                    row.push(rec ? `${rec.status}${rec.reason ? ':'+rec.reason : ''}` : '-');
+                });
+                csvContent += row.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `사랑집단_집회출석_${ym}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function renderVolunteerTable() {
+            const ym = document.getElementById('volunteer-month-input').value;
+            const tbody = document.getElementById('volunteer-tbody');
+            tbody.innerHTML = '';
+
+            if (!appData.volunteer[ym]) {
+                appData.volunteer[ym] = {};
+            }
+
+            appData.members.forEach((m, idx) => {
+                if (!appData.volunteer[ym][m.name]) {
+                    appData.volunteer[ym][m.name] = { hours: '', participated: false, study: '', memo: '' };
+                }
+                const v = appData.volunteer[ym][m.name];
+                const isPioneer = m.role === '파이오니아';
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                
+                let inputCellHTML = '';
+                if (isPioneer) {
+                    inputCellHTML = `
+                        <div class="flex items-center gap-1">
+                            <input type="number" min="0" step="0.5" value="${v.hours || ''}" oninput="setVolunteerData('${ym}', '${m.name}', 'hours', this.value)" class="w-16 sm:w-20 border border-slate-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="시간">
+                            <span class="text-xs text-slate-500">시간</span>
+                        </div>
+                    `;
+                } else {
+                    inputCellHTML = `
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" ${v.participated ? 'checked' : ''} onchange="setVolunteerData('${ym}', '${m.name}', 'participated', this.checked)" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                            <span class="text-xs font-medium text-slate-700">봉사 참여</span>
+                        </label>
+                    `;
+                }
+
+                tr.innerHTML = `
+                    <td class="p-3 text-center text-xs text-slate-400">${idx + 1}</td>
+                    <td class="p-3">
+                        <div class="font-semibold text-slate-700">${m.name}</div>
+                        <span class="text-[10px] px-1.5 py-0.2 rounded font-medium ${isPioneer ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-500'}">${m.role}</span>
+                    </td>
+                    <td class="p-3">${inputCellHTML}</td>
+                    <td class="p-3">
+                        <input type="text" value="${v.study || ''}" oninput="setVolunteerData('${ym}', '${m.name}', 'study', this.value)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="연구 성원명/건수">
+                    </td>
+                    <td class="p-3">
+                        <input type="text" value="${v.memo || ''}" oninput="setVolunteerData('${ym}', '${m.name}', 'memo', this.value)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="비고 입력">
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function setVolunteerData(ym, name, field, value) {
+            if (!appData.volunteer[ym]) appData.volunteer[ym] = {};
+            if (!appData.volunteer[ym][name]) appData.volunteer[ym][name] = { hours: '', participated: false, study: '', memo: '' };
+            appData.volunteer[ym][name][field] = value;
+            saveData();
+        }
+
+        function renderPublicationTable() {
+            const ym = document.getElementById('pub-month-input').value;
+            const thead = document.getElementById('pub-thead');
+            const tbody = document.getElementById('pub-tbody');
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+
+            if (!appData.publication[ym]) {
+                appData.publication[ym] = {};
+            }
+
+            let headerHTML = `<tr class="bg-slate-100 border-b border-slate-200 text-slate-600 uppercase tracking-wider">
+                <th class="p-3 w-12 text-center">No</th>
+                <th class="p-3 w-28">성원명</th>`;
+            appData.pubTypes.forEach(pt => {
+                headerHTML += `<th class="p-3 text-center w-28">${pt}</th>`;
+            });
+            headerHTML += `</tr>`;
+            thead.innerHTML = headerHTML;
+
+            appData.members.forEach((m, idx) => {
+                if (!appData.publication[ym][m.name]) {
+                    appData.publication[ym][m.name] = {};
+                }
+                let trHTML = `<td class="p-3 text-center text-xs text-slate-400">${idx+1}</td><td class="p-3 font-semibold text-slate-700">${m.name}</td>`;
+                
+                appData.pubTypes.forEach(pt => {
+                    let count = appData.publication[ym][m.name][pt] || 0;
+                    trHTML += `
+                        <td class="p-3 text-center">
+                            <div class="inline-flex items-center gap-1 border border-slate-200 rounded-lg p-1 bg-slate-50">
+                                <button type="button" onclick="updatePubCount('${ym}', '${m.name}', '${pt}', -1)" class="w-6 h-6 rounded bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 text-xs font-bold shadow-sm">-</button>
+                                <span class="w-7 text-center text-xs font-semibold text-slate-700">${count}</span>
+                                <button type="button" onclick="updatePubCount('${ym}', '${m.name}', '${pt}', 1)" class="w-6 h-6 rounded bg-white border border-slate-200 hover:bg-slate-100 text-indigo-600 text-xs font-bold shadow-sm">+</button>
+                            </div>
+                        </td>
+                    `;
+                });
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = trHTML;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updatePubCount(ym, name, pt, delta) {
+            if (!appData.publication[ym]) appData.publication[ym] = {};
+            if (!appData.publication[ym][name]) appData.publication[ym][name] = {};
+            let current = appData.publication[ym][name][pt] || 0;
+            let next = Math.max(0, current + delta);
+            appData.publication[ym][name][pt] = next;
+            saveData();
+            renderPublicationTable();
+        }
+
+        function openPubTypeModal() {
+            document.getElementById('pub-type-modal').classList.remove('hidden');
+            renderPubTypeList();
+        }
+
+        function closePubTypeModal() {
+            document.getElementById('pub-type-modal').classList.add('hidden');
+            renderPublicationTable();
+        }
+
+        function renderPubTypeList() {
+            const listDiv = document.getElementById('pub-type-list');
+            listDiv.innerHTML = '';
+            appData.pubTypes.forEach((pt, idx) => {
+                const item = document.createElement('div');
+                item.className = "flex justify-between items-center p-2.5 bg-white text-xs sm:text-sm";
+                item.innerHTML = `
+                    <span class="font-medium text-slate-700">${pt}</span>
+                    <button onclick="deletePubType(${idx})" class="text-rose-500 hover:text-rose-700 text-xs px-2 py-1"><i class="fa-solid fa-trash"></i> 삭제</button>
+                `;
+                listDiv.appendChild(item);
+            });
+        }
+
+        function addPubType() {
+            const input = document.getElementById('new-pub-type-input');
+            const val = input.value.trim();
+            if (!val) return;
+            if (appData.pubTypes.includes(val)) {
+                alert("이미 존재하는 출판물 종류입니다.");
+                return;
+            }
+            appData.pubTypes.push(val);
+            input.value = '';
+            saveData();
+            renderPubTypeList();
+        }
+
+        function deletePubType(idx) {
+            if (appData.pubTypes.length <= 1) {
+                alert("최소 1개의 출판물 종류는 유지되어야 합니다.");
+                return;
+            }
+            const target = appData.pubTypes[idx];
+            if (confirm(`"${target}" 종류를 삭제하시겠습니까?`)) {
+                appData.pubTypes.splice(idx, 1);
+                saveData();
+                renderPubTypeList();
+            }
+        }
+
+        function resetToDefaultData() {
+            if (confirm("모든 데이터를 기본 설정으로 초기화하시겠습니까?")) {
+                appData.members = JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
+                appData.pubTypes = [...DEFAULT_PUB_TYPES];
+                appData.attendance = {};
+                appData.volunteer = {};
+                appData.publication = {};
+                saveData();
+                alert("초기화되었습니다.");
+                renderGroupTable();
+                initAttendanceSessions();
+                renderAttendanceCheck();
+                renderVolunteerTable();
+                renderPublicationTable();
+            }
+        }
+
+        function exportDataJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `sarang_group_backup_${new Date().toISOString().slice(0,10)}.json`);
+            dlAnchor.click();
+        }
+
+        function importDataJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.members && parsed.pubTypes) {
+                        appData = parsed;
+                        saveData();
+                        alert("데이터가 성공적으로 복원되었습니다.");
+                        renderGroupTable();
+                        initAttendanceSessions();
+                        renderAttendanceCheck();
+                        renderVolunteerTable();
+                        renderPublicationTable();
+                    } else {
+                        alert("올바르지 않은 백업 파일 형식입니다.");
+                    }
+                } catch (err) {
+                    alert("JSON 파일을 읽는 중 오류가 발생했습니다.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
