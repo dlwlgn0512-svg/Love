@@ -40,7 +40,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-3">
                 <div>
                     <h2 class="text-sm sm:text-base font-bold text-slate-700">사랑 집단 성원 명단</h2>
-                    <p class="text-xs text-slate-500">성원 구분 및 직책/임명을 관리합니다.</p>
+                    <p class="text-xs text-slate-500">성원 구분, 임명 및 출판물 대표 여부를 관리합니다.</p>
                 </div>
                 <button onclick="openMemberModal()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center justify-center gap-1 shadow">
                     <i class="fa-solid fa-user-plus"></i> 성원 추가
@@ -56,6 +56,7 @@
                                 <th class="p-3 w-24">이름</th>
                                 <th class="p-3 w-20 text-center">구분</th>
                                 <th class="p-3 w-48">임명 (중복 가능)</th>
+                                <th class="p-3 w-24 text-center">출판물 대표</th>
                                 <th class="p-3">연락처 / 비고</th>
                                 <th class="p-3 text-center w-24">관리</th>
                             </tr>
@@ -80,6 +81,7 @@
                 </div>
             </div>
 
+            <!-- 월별 통계 보기 및 6개월 합산 버튼 바 -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     <label class="text-xs font-bold text-slate-600 whitespace-nowrap">월별 선택:</label>
@@ -220,12 +222,15 @@
             </div>
         </section>
 
-        <!-- 4. 출판물 탭 -->
+        <!-- 4. 출판물 탭 (가족 대표만 표시) -->
         <section id="tab-publication" class="tab-content space-y-4 hidden">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h2 class="text-sm sm:text-base font-bold text-slate-700">출판물 신청 현황</h2>
-                    <p class="text-xs text-slate-500">성원별 출판물 신청 내역을 관리합니다.</p>
+                    <h2 class="text-sm sm:text-base font-bold text-slate-700 flex items-center gap-2">
+                        <span>출판물 신청 현황</span>
+                        <span class="text-xs font-normal text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">가족 대표 성원</span>
+                    </h2>
+                    <p class="text-xs text-slate-500">가족 대표 성원(9명)의 월별 출판물 신청 내역을 관리합니다.</p>
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
                     <input type="month" id="pub-month-input" onchange="renderPublicationTable()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -292,7 +297,7 @@
         </div>
     </nav>
 
-    <!-- 모달: 성원 추가/수정 -->
+    <!-- 모달: 성원 추가/수정 (출판물 대표 체크박스 포함) -->
     <div id="member-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-5 sm:p-6 space-y-4">
             <h3 id="member-modal-title" class="text-sm sm:text-base font-bold text-slate-800">성원 추가</h3>
@@ -330,6 +335,13 @@
                             <span>병교위</span>
                         </label>
                     </div>
+                </div>
+                <div class="bg-indigo-50/70 p-3 rounded-lg border border-indigo-100">
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" id="modal-member-isPubRep" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                        <span class="text-xs font-bold text-indigo-900">가족 출판물 대표 성원</span>
+                    </label>
+                    <p class="text-[11px] text-slate-500 mt-1 pl-6">체크 시 출판물 탭에 해당 성원이 가족 대표로 표시됩니다.</p>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">연락처 / 비고</label>
@@ -383,7 +395,7 @@
         </div>
     </div>
 
-    <!-- ★ 이미지 캡처용 전용 템플릿 (고려시간 컬럼 단독 추가) -->
+    <!-- 이미지 캡처용 전용 템플릿 -->
     <div id="clean-image-template" style="position: absolute; left: -9999px; top: -9999px; width: 480px;" class="bg-white p-6 font-sans text-slate-800">
         <div class="border-b-2 border-indigo-600 pb-3 mb-4 flex justify-between items-end">
             <div>
@@ -433,22 +445,23 @@
         const db = getFirestore(app);
         const DATA_DOC = doc(db, "sarangGroup", "mainData");
 
+        // 요청하신 9명의 대표 성원 반영
         const DEFAULT_MEMBERS = [
-            { name: "이지후", gender: "형제", roles: ["파이오니아"], memo: "" },
-            { name: "정수빈", gender: "자매", roles: ["파이오니아"], memo: "" },
-            { name: "서현우", gender: "형제", roles: ["파이오니아"], memo: "" },
-            { name: "구은희", gender: "자매", roles: ["파이오니아"], memo: "" },
-            { name: "서리우", gender: "자매", roles: [], memo: "" },
-            { name: "서리아", gender: "자매", roles: [], memo: "" },
-            { name: "김성용", gender: "형제", roles: [], memo: "" },
-            { name: "김에녹", gender: "형제", roles: [], memo: "" },
-            { name: "김사랑", gender: "자매", roles: [], memo: "" },
-            { name: "조일성", gender: "형제", roles: ["파이오니아"], memo: "" },
-            { name: "유동석", gender: "형제", roles: [], memo: "" },
-            { name: "이일천", gender: "형제", roles: ["파이오니아"], memo: "" },
-            { name: "권숙이", gender: "자매", roles: ["파이오니아"], memo: "" },
-            { name: "유금년", gender: "자매", roles: [], memo: "" },
-            { name: "김명분", gender: "자매", roles: [], memo: "" }
+            { name: "이지후", gender: "형제", roles: ["파이오니아"], isPubRep: true, memo: "" },
+            { name: "정수빈", gender: "자매", roles: ["파이오니아"], isPubRep: false, memo: "" },
+            { name: "서현우", gender: "형제", roles: ["파이오니아"], isPubRep: true, memo: "" },
+            { name: "구은희", gender: "자매", roles: ["파이오니아"], isPubRep: false, memo: "" },
+            { name: "서리우", gender: "자매", roles: [], isPubRep: false, memo: "" },
+            { name: "서리아", gender: "자매", roles: [], isPubRep: false, memo: "" },
+            { name: "김성용", gender: "형제", roles: [], isPubRep: true, memo: "" },
+            { name: "김에녹", gender: "형제", roles: [], isPubRep: false, memo: "" },
+            { name: "김사랑", gender: "자매", roles: [], isPubRep: false, memo: "" },
+            { name: "조일성", gender: "형제", roles: ["파이오니아"], isPubRep: true, memo: "" },
+            { name: "유동석", gender: "형제", roles: [], isPubRep: true, memo: "" },
+            { name: "이일천", gender: "형제", roles: ["파이오니아"], isPubRep: true, memo: "" },
+            { name: "권숙이", gender: "자매", roles: ["파이오니아"], isPubRep: true, memo: "" },
+            { name: "유금년", gender: "자매", roles: [], isPubRep: true, memo: "" },
+            { name: "김명분", gender: "자매", roles: [], isPubRep: true, memo: "" }
         ];
         const DEFAULT_PUB_TYPES = ["연구용", "대형", "집회교재", "배부용"];
 
@@ -460,11 +473,22 @@
             publication: {}
         };
 
+        const PUB_REP_NAMES = ["이지후", "서현우", "김성용", "조일성", "유동석", "이일천", "권숙이", "유금년", "김명분"];
+
         onSnapshot(DATA_DOC, (docSnap) => {
             const statusEl = document.getElementById("cloud-status");
             if (docSnap.exists()) {
                 appData = docSnap.data();
-                if (!appData.members || appData.members.length === 0) appData.members = DEFAULT_MEMBERS;
+                if (!appData.members || appData.members.length === 0) {
+                    appData.members = DEFAULT_MEMBERS;
+                } else {
+                    // 기존 데이터에 isPubRep 필드가 없거나 업데이트가 필요한 경우 자동 보완
+                    appData.members.forEach(m => {
+                        if (typeof m.isPubRep === 'undefined') {
+                            m.isPubRep = PUB_REP_NAMES.includes(m.name);
+                        }
+                    });
+                }
                 if (!appData.pubTypes) appData.pubTypes = DEFAULT_PUB_TYPES;
                 if (!appData.attendance) appData.attendance = {};
                 if (!appData.volunteer) appData.volunteer = {};
@@ -497,7 +521,7 @@
 
     <!-- UI 로직 -->
     <script>
-        const APP_VERSION = '1.5.0';
+        const APP_VERSION = '1.6.0';
 
         function checkAppVersion() {
             const savedVersion = localStorage.getItem('sarang_app_version');
@@ -567,7 +591,7 @@
             else if (tabId === 'publication') renderPublicationTable();
         }
 
-        // 1. 성원 명단
+        // 1. 성원 명단 (출판물 대표 뱃지 표시)
         function renderGroupTable() {
             const tbody = document.getElementById('member-table-body');
             tbody.innerHTML = '';
@@ -597,11 +621,16 @@
                     }).join('');
                 }
 
+                let pubRepBadge = m.isPubRep 
+                    ? '<span class="px-2 py-0.5 text-[11px] rounded-full font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">대표</span>' 
+                    : '<span class="text-xs text-slate-300">-</span>';
+
                 tr.innerHTML = `
                     <td class="p-3 text-center text-xs text-slate-400">${idx + 1}</td>
                     <td class="p-3 font-semibold">${m.name}</td>
                     <td class="p-3 text-center">${genderBadge}</td>
                     <td class="p-3">${rolesHTML}</td>
+                    <td class="p-3 text-center">${pubRepBadge}</td>
                     <td class="p-3 text-xs text-slate-500">${m.memo || '-'}</td>
                     <td class="p-3 text-center">
                         <button onclick="openMemberModal('${m.name}')" class="text-indigo-600 hover:text-indigo-800 p-1 mr-1"><i class="fa-solid fa-pen"></i></button>
@@ -619,9 +648,11 @@
             const nameInput = document.getElementById('modal-member-name');
             const genderSelect = document.getElementById('modal-member-gender');
             const roleCheckboxes = document.querySelectorAll('input[name="modal-roles"]');
+            const isPubRepCheckbox = document.getElementById('modal-member-isPubRep');
             const memoInput = document.getElementById('modal-member-memo');
 
             roleCheckboxes.forEach(cb => cb.checked = false);
+            isPubRepCheckbox.checked = false;
             const appData = window.getAppData();
 
             if (name) {
@@ -635,12 +666,14 @@
                         if (member.roles.includes(cb.value)) cb.checked = true;
                     });
                 }
+                isPubRepCheckbox.checked = !!member.isPubRep;
                 memoInput.value = member.memo || '';
             } else {
                 title.innerText = "새 성원 추가";
                 origInput.value = "";
                 nameInput.value = "";
                 genderSelect.value = "형제";
+                isPubRepCheckbox.checked = false;
                 memoInput.value = "";
             }
             modal.classList.remove('hidden');
@@ -654,6 +687,7 @@
             const origName = document.getElementById('modal-member-original-name').value;
             const name = document.getElementById('modal-member-name').value.trim();
             const gender = document.getElementById('modal-member-gender').value;
+            const isPubRep = document.getElementById('modal-member-isPubRep').checked;
             const memo = document.getElementById('modal-member-memo').value.trim();
             const appData = window.getAppData();
             
@@ -669,13 +703,13 @@
 
             if (origName) {
                 const idx = appData.members.findIndex(m => m.name === origName);
-                if (idx !== -1) appData.members[idx] = { name, gender, roles, memo };
+                if (idx !== -1) appData.members[idx] = { name, gender, roles, isPubRep, memo };
             } else {
                 if (appData.members.some(m => m.name === name)) {
                     alert("이미 존재하는 성원 이름입니다.");
                     return;
                 }
-                appData.members.push({ name, gender, roles, memo });
+                appData.members.push({ name, gender, roles, isPubRep, memo });
             }
 
             window.saveDataToCloud();
@@ -1090,7 +1124,7 @@
             statsBox.classList.remove('hidden');
         }
 
-        // ★ 모바일 다운로드 완벽 지원: 고려시간 컬럼 추가 + 길게 누르기 모달/공유
+        // 모바일 다운로드 완벽 지원 (Web Share API 및 길게 누르기 팝업)
         let currentGeneratedBlob = null;
         let currentGeneratedFilename = "";
 
@@ -1142,27 +1176,21 @@
 
             currentGeneratedFilename = `사랑집단_봉사보고_${ym}.png`;
 
-            // html2canvas 캡처
             html2canvas(template, { scale: 3, backgroundColor: '#ffffff' }).then(canvas => {
                 canvas.toBlob(blob => {
                     currentGeneratedBlob = blob;
                     const dataUrl = canvas.toDataURL('image/png');
 
-                    // 1) 모바일 네이티브 공유 API (iOS/Android 지원 시 우선 호출)
                     if (navigator.canShare && navigator.canShare({ files: [new File([blob], currentGeneratedFilename, { type: 'image/png' })] })) {
                         const file = new File([blob], currentGeneratedFilename, { type: 'image/png' });
                         navigator.share({
                             files: [file],
                             title: `사랑 집단 ${ym} 봉사 보고`
                         }).catch(() => {
-                            // 공유 취소 시 미리보기 모달 표시
                             openImagePreviewModal(dataUrl);
                         });
                     } else {
-                        // 2) 일반 브라우저 및 미지원 환경: 길게 누르기 저장 모달 오픈
                         openImagePreviewModal(dataUrl);
-                        
-                        // 데스크톱인 경우 직접 다운로드도 시도
                         const link = document.createElement('a');
                         link.download = currentGeneratedFilename;
                         link.href = dataUrl;
@@ -1198,7 +1226,6 @@
             alert("이미지를 1~2초간 꾹 눌러 '사진 앱에 저장'을 선택해 주세요!");
         }
 
-        // 봉사보고 문자 복사
         function shareVolunteerReportSMS() {
             const ym = document.getElementById('volunteer-month-input').value;
             const sy = getServiceYear(ym);
@@ -1247,7 +1274,7 @@
             document.body.removeChild(textarea);
         }
 
-        // 4. 출판물
+        // 4. 출판물 (가족 대표 성원 9명만 필터링하여 표시)
         function renderPublicationTable() {
             const ym = document.getElementById('pub-month-input').value;
             const thead = document.getElementById('pub-thead');
@@ -1262,14 +1289,17 @@
 
             let headerHTML = `<tr class="bg-slate-100 border-b border-slate-200 text-slate-600 uppercase tracking-wider">
                 <th class="p-3 w-12 text-center">No</th>
-                <th class="p-3 w-28">성원명</th>`;
+                <th class="p-3 w-28">대표 성원</th>`;
             (appData.pubTypes || []).forEach(pt => {
                 headerHTML += `<th class="p-3 text-center w-28">${pt}</th>`;
             });
             headerHTML += `</tr>`;
             thead.innerHTML = headerHTML;
 
-            appData.members.forEach((m, idx) => {
+            // 가족 대표로 지정된 성원만 필터링 (기본 9명: 이지후, 서현우, 김성용, 조일성, 유동석, 이일천, 권숙이, 유금년, 김명분)
+            const pubRepresentatives = appData.members.filter(m => !!m.isPubRep);
+
+            pubRepresentatives.forEach((m, idx) => {
                 if (!appData.publication[ym][m.name]) appData.publication[ym][m.name] = {};
                 let trHTML = `<td class="p-3 text-center text-xs text-slate-400">${idx+1}</td><td class="p-3 font-semibold text-slate-700">${m.name}</td>`;
                 
@@ -1361,21 +1391,21 @@
             if (confirm("클라우드의 모든 데이터를 기본 초기 상태로 리셋하시겠습니까?")) {
                 const appData = window.getAppData();
                 appData.members = [
-                    { name: "이지후", gender: "형제", roles: ["파이오니아"], memo: "" },
-                    { name: "정수빈", gender: "자매", roles: ["파이오니아"], memo: "" },
-                    { name: "서현우", gender: "형제", roles: ["파이오니아"], memo: "" },
-                    { name: "구은희", gender: "자매", roles: ["파이오니아"], memo: "" },
-                    { name: "서리우", gender: "자매", roles: [], memo: "" },
-                    { name: "서리아", gender: "자매", roles: [], memo: "" },
-                    { name: "김성용", gender: "형제", roles: [], memo: "" },
-                    { name: "김에녹", gender: "형제", roles: [], memo: "" },
-                    { name: "김사랑", gender: "자매", roles: [], memo: "" },
-                    { name: "조일성", gender: "형제", roles: ["파이오니아"], memo: "" },
-                    { name: "유동석", gender: "형제", roles: [], memo: "" },
-                    { name: "이일천", gender: "형제", roles: ["파이오니아"], memo: "" },
-                    { name: "권숙이", gender: "자매", roles: ["파이오니아"], memo: "" },
-                    { name: "유금년", gender: "자매", roles: [], memo: "" },
-                    { name: "김명분", gender: "자매", roles: [], memo: "" }
+                    { name: "이지후", gender: "형제", roles: ["파이오니아"], isPubRep: true, memo: "" },
+                    { name: "정수빈", gender: "자매", roles: ["파이오니아"], isPubRep: false, memo: "" },
+                    { name: "서현우", gender: "형제", roles: ["파이오니아"], isPubRep: true, memo: "" },
+                    { name: "구은희", gender: "자매", roles: ["파이오니아"], isPubRep: false, memo: "" },
+                    { name: "서리우", gender: "자매", roles: [], isPubRep: false, memo: "" },
+                    { name: "서리아", gender: "자매", roles: [], isPubRep: false, memo: "" },
+                    { name: "김성용", gender: "형제", roles: [], isPubRep: true, memo: "" },
+                    { name: "김에녹", gender: "형제", roles: [], isPubRep: false, memo: "" },
+                    { name: "김사랑", gender: "자매", roles: [], isPubRep: false, memo: "" },
+                    { name: "조일성", gender: "형제", roles: ["파이오니아"], isPubRep: true, memo: "" },
+                    { name: "유동석", gender: "형제", roles: [], isPubRep: true, memo: "" },
+                    { name: "이일천", gender: "형제", roles: ["파이오니아"], isPubRep: true, memo: "" },
+                    { name: "권숙이", gender: "자매", roles: ["파이오니아"], isPubRep: true, memo: "" },
+                    { name: "유금년", gender: "자매", roles: [], isPubRep: true, memo: "" },
+                    { name: "김명분", gender: "자매", roles: [], isPubRep: true, memo: "" }
                 ];
                 appData.pubTypes = ["연구용", "대형", "집회교재", "배부용"];
                 appData.attendance = {};
