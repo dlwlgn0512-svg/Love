@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2canvas 라이브러리 (이미지 캡처용) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body {
             word-break: keep-all;
@@ -138,13 +140,23 @@
                     <h2 class="text-sm sm:text-base font-bold text-slate-700">월별 봉사 보고</h2>
                     <p class="text-xs text-slate-500">파이오니아(시간 기록) 및 일반 성원(참석 체크), 연구 및 비고 관리</p>
                 </div>
-                <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <label class="text-xs font-bold text-slate-600 whitespace-nowrap">보고 월:</label>
-                    <input type="month" id="volunteer-month-input" onchange="renderVolunteerTable()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1 sm:flex-none">
+                <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap justify-between sm:justify-start">
+                    <input type="month" id="volunteer-month-input" onchange="renderVolunteerTable()" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button onclick="shareVolunteerReportSMS()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1 shadow whitespace-nowrap">
+                        <i class="fa-solid fa-comment-sms"></i> 문자 복사
+                    </button>
+                    <button onclick="downloadVolunteerReportImage()" class="bg-violet-600 hover:bg-violet-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1 shadow whitespace-nowrap">
+                        <i class="fa-solid fa-file-image"></i> 이미지 저장
+                    </button>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <!-- 이미지 캡처 영역 (봉사보고 카드 래퍼) -->
+            <div id="volunteer-capture-area" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-4 space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                    <h3 class="font-bold text-slate-800 text-sm sm:text-base" id="volunteer-image-title">사랑 집단 봉사 보고</h3>
+                    <span class="text-xs text-slate-400" id="volunteer-image-date"></span>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs sm:text-sm whitespace-nowrap sm:whitespace-normal">
                         <thead>
@@ -312,6 +324,21 @@
 
     <!-- 자바스크립트 로직 -->
     <script>
+        // ★ 앱 버전 (코드를 수정하여 업데이트할 때마다 이 숫자를 1씩 올려주세요 예: '1.0.1', '1.0.2')
+        const APP_VERSION = '1.0.0';
+
+        function checkAppVersion() {
+            const savedVersion = localStorage.getItem('sarang_app_version');
+            if (savedVersion && savedVersion !== APP_VERSION) {
+                if (confirm("새로운 업데이트가 있습니다! 최신 버전으로 새로고침하여 적용하시겠습니까?")) {
+                    localStorage.setItem('sarang_app_version', APP_VERSION);
+                    window.location.reload(true);
+                }
+            } else if (!savedVersion) {
+                localStorage.setItem('sarang_app_version', APP_VERSION);
+            }
+        }
+
         const DEFAULT_MEMBERS = [
             { name: "이지후", gender: "형제", roles: ["파이오니아"], memo: "" },
             { name: "정수빈", gender: "자매", roles: ["파이오니아"], memo: "" },
@@ -341,6 +368,7 @@
         };
 
         function initApp() {
+            checkAppVersion(); // 버전 체크 실행
             loadData();
             
             const now = new Date();
@@ -729,6 +757,7 @@
 
         function renderVolunteerTable() {
             const ym = document.getElementById('volunteer-month-input').value;
+            document.getElementById('volunteer-image-date').innerText = `보고 월: ${ym}`;
             const tbody = document.getElementById('volunteer-tbody');
             tbody.innerHTML = '';
 
@@ -788,6 +817,73 @@
             if (!appData.volunteer[ym][name]) appData.volunteer[ym][name] = { hours: '', participated: false, study: '', memo: '' };
             appData.volunteer[ym][name][field] = value;
             saveData();
+        }
+
+        function shareVolunteerReportSMS() {
+            const ym = document.getElementById('volunteer-month-input').value;
+            const volData = appData.volunteer[ym] || {};
+
+            let reportText = `[사랑 집단 ${ym} 봉사 보고]\n\n`;
+
+            appData.members.forEach((m, idx) => {
+                const v = volData[m.name] || {};
+                const isPioneer = m.roles && m.roles.includes('파이오니아');
+                
+                let activityStr = "";
+                if (isPioneer) {
+                    let hrs = v.hours ? `${v.hours}시간` : "0시간";
+                    activityStr = `봉사시간: ${hrs}`;
+                } else {
+                    activityStr = v.participated ? "봉사 참여" : "미참여";
+                }
+
+                let studyStr = v.study ? `연구: ${v.study}` : "";
+                let memoStr = v.memo ? `비고: ${v.memo}` : "";
+
+                let details = [activityStr, studyStr, memoStr].filter(Boolean).join(" | ");
+                reportText += `${idx + 1}. ${m.name} (${m.gender}) : ${details}\n`;
+            });
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(reportText).then(() => {
+                    alert("봉사 보고 내용이 클립보드에 복사되었습니다!\n문자나 카카오톡에 붙여넣기 하세요.");
+                }).catch(() => {
+                    fallbackCopyText(reportText);
+                });
+            } else {
+                fallbackCopyText(reportText);
+            }
+        }
+
+        function fallbackCopyText(text) {
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            textarea.style.position = "fixed";
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                alert("봉사 보고 내용이 복사되었습니다!");
+            } catch (err) {
+                alert("복사에 실패했습니다.");
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function downloadVolunteerReportImage() {
+            const ym = document.getElementById('volunteer-month-input').value;
+            const captureArea = document.getElementById('volunteer-capture-area');
+
+            html2canvas(captureArea, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `사랑집단_봉사보고_${ym}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }).catch(err => {
+                alert("이미지 저장 중 오류가 발생했습니다.");
+                console.error(err);
+            });
         }
 
         function renderPublicationTable() {
