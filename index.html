@@ -37,7 +37,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-3">
                 <div>
                     <h2 class="text-sm sm:text-base font-bold text-slate-700">사랑 집단 성원 명단 (엑셀 형식)</h2>
-                    <p class="text-xs text-slate-500">집단 성원들의 형제/자매 구분 및 임명 상태를 관리합니다.</p>
+                    <p class="text-xs text-slate-500">집단 성원들의 형제/자매 구분 및 다중 임명 상태를 관리합니다.</p>
                 </div>
                 <button onclick="openMemberModal()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center justify-center gap-1 shadow">
                     <i class="fa-solid fa-user-plus"></i> 성원 추가
@@ -52,7 +52,7 @@
                                 <th class="p-3 text-center w-12">No</th>
                                 <th class="p-3 w-24">이름</th>
                                 <th class="p-3 w-20 text-center">구분</th>
-                                <th class="p-3 w-32">임명</th>
+                                <th class="p-3 w-48">임명 (중복 가능)</th>
                                 <th class="p-3">연락처 / 비고</th>
                                 <th class="p-3 text-center w-24">관리</th>
                             </tr>
@@ -252,23 +252,32 @@
                     <label class="block text-xs font-semibold text-slate-600 mb-1">이름</label>
                     <input type="text" id="modal-member-name" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">구분</label>
-                        <select id="modal-member-gender" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="형제">형제</option>
-                            <option value="자매">자매</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">임명</label>
-                        <select id="modal-member-role" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="파이오니아">파이오니아</option>
-                            <option value="장로">장로</option>
-                            <option value="봉사의 종">봉사의 종</option>
-                            <option value="병교위">병교위</option>
-                            <option value="해당없음">해당없음</option>
-                        </select>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">구분</label>
+                    <select id="modal-member-gender" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="형제">형제</option>
+                        <option value="자매">자매</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">임명 (중복 선택 가능)</label>
+                    <div class="grid grid-cols-2 gap-2 p-2 border border-slate-300 rounded-lg bg-slate-50 text-xs sm:text-sm">
+                        <label class="flex items-center gap-2 cursor-pointer p-1">
+                            <input type="checkbox" name="modal-roles" value="파이오니아" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                            <span>파이오니아</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer p-1">
+                            <input type="checkbox" name="modal-roles" value="장로" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                            <span>장로</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer p-1">
+                            <input type="checkbox" name="modal-roles" value="봉사의 종" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                            <span>봉사의 종</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer p-1">
+                            <input type="checkbox" name="modal-roles" value="병교위" class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                            <span>병교위</span>
+                        </label>
                     </div>
                 </div>
                 <div>
@@ -303,21 +312,21 @@
     <!-- 자바스크립트 로직 -->
     <script>
         const DEFAULT_MEMBERS = [
-            { name: "이지후", gender: "형제", role: "파이오니아", memo: "" },
-            { name: "정수빈", gender: "자매", role: "파이오니아", memo: "" },
-            { name: "서현우", gender: "형제", role: "파이오니아", memo: "" },
-            { name: "구은희", gender: "자매", role: "파이오니아", memo: "" },
-            { name: "서리우", gender: "자매", role: "해당없음", memo: "" },
-            { name: "서리아", gender: "자매", role: "해당없음", memo: "" },
-            { name: "김성용", gender: "형제", role: "해당없음", memo: "" },
-            { name: "김에녹", gender: "형제", role: "해당없음", memo: "" },
-            { name: "김사랑", gender: "자매", role: "해당없음", memo: "" },
-            { name: "조일성", gender: "형제", role: "파이오니아", memo: "" },
-            { name: "유동석", gender: "형제", role: "해당없음", memo: "" },
-            { name: "이일천", gender: "형제", role: "파이오니아", memo: "" },
-            { name: "권숙이", gender: "자매", role: "파이오니아", memo: "" },
-            { name: "유금년", gender: "자매", role: "해당없음", memo: "" },
-            { name: "김명분", gender: "자매", role: "해당없음", memo: "" }
+            { name: "이지후", gender: "형제", roles: ["파이오니아"], memo: "" },
+            { name: "정수빈", gender: "자매", roles: ["파이오니아"], memo: "" },
+            { name: "서현우", gender: "형제", roles: ["파이오니아"], memo: "" },
+            { name: "구은희", gender: "자매", roles: ["파이오니아"], memo: "" },
+            { name: "서리우", gender: "자매", roles: [], memo: "" },
+            { name: "서리아", gender: "자매", roles: [], memo: "" },
+            { name: "김성용", gender: "형제", roles: [], memo: "" },
+            { name: "김에녹", gender: "형제", roles: [], memo: "" },
+            { name: "김사랑", gender: "자매", roles: [], memo: "" },
+            { name: "조일성", gender: "형제", roles: ["파이오니아"], memo: "" },
+            { name: "유동석", gender: "형제", roles: [], memo: "" },
+            { name: "이일천", gender: "형제", roles: ["파이오니아"], memo: "" },
+            { name: "권숙이", gender: "자매", roles: ["파이오니아"], memo: "" },
+            { name: "유금년", gender: "자매", roles: [], memo: "" },
+            { name: "김명분", gender: "자매", roles: [], memo: "" }
         ];
 
         const DEFAULT_PUB_TYPES = ["연구용", "대형", "집회교재", "배부용"];
@@ -361,10 +370,12 @@
             if (!appData.members || appData.members.length === 0) {
                 appData.members = JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
             } else {
-                // 이전 데이터 마이그레이션 (gender 필드 보완)
+                // 이전 단일 role 데이터나 구조 마이그레이션 보완
                 appData.members.forEach(m => {
                     if (!m.gender) m.gender = "형제";
-                    if (!m.role) m.role = "해당없음";
+                    if (!m.roles) {
+                        m.roles = m.role && m.role !== "해당없음" ? [m.role] : [];
+                    }
                 });
             }
             if (!appData.pubTypes || appData.pubTypes.length === 0) {
@@ -416,13 +427,25 @@
                     ? '<span class="px-2 py-0.5 text-[11px] rounded-full font-medium bg-blue-100 text-blue-700">형제</span>'
                     : '<span class="px-2 py-0.5 text-[11px] rounded-full font-medium bg-pink-100 text-pink-700">자매</span>';
 
-                let roleBadge = `<span class="px-2 py-0.5 text-[11px] rounded-full font-medium ${m.role === '파이오니아' ? 'bg-indigo-100 text-indigo-700' : m.role === '장로' ? 'bg-purple-100 text-purple-700' : m.role === '봉사의 종' ? 'bg-emerald-100 text-emerald-700' : m.role === '병교위' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}">${m.role}</span>`;
+                let rolesHTML = '';
+                if (!m.roles || m.roles.length === 0) {
+                    rolesHTML = '<span class="text-xs text-slate-400">해당없음</span>';
+                } else {
+                    rolesHTML = m.roles.map(r => {
+                        let bg = 'bg-slate-100 text-slate-600';
+                        if (r === '파이오니아') bg = 'bg-indigo-100 text-indigo-700';
+                        else if (r === '장로') bg = 'bg-purple-100 text-purple-700';
+                        else if (r === '봉사의 종') bg = 'bg-emerald-100 text-emerald-700';
+                        else if (r === '병교위') bg = 'bg-amber-100 text-amber-700';
+                        return `<span class="px-2 py-0.5 text-[11px] rounded-full font-medium ${bg} inline-block mr-1 mb-1">${r}</span>`;
+                    }).join('');
+                }
 
                 tr.innerHTML = `
                     <td class="p-3 text-center text-xs text-slate-400">${idx + 1}</td>
                     <td class="p-3 font-semibold">${m.name}</td>
                     <td class="p-3 text-center">${genderBadge}</td>
-                    <td class="p-3">${roleBadge}</td>
+                    <td class="p-3">${rolesHTML}</td>
                     <td class="p-3 text-xs text-slate-500">${m.memo || '-'}</td>
                     <td class="p-3 text-center">
                         <button onclick="openMemberModal('${m.name}')" class="text-indigo-600 hover:text-indigo-800 p-1 mr-1" title="수정"><i class="fa-solid fa-pen"></i></button>
@@ -439,8 +462,11 @@
             const origInput = document.getElementById('modal-member-original-name');
             const nameInput = document.getElementById('modal-member-name');
             const genderSelect = document.getElementById('modal-member-gender');
-            const roleSelect = document.getElementById('modal-member-role');
+            const roleCheckboxes = document.querySelectorAll('input[name="modal-roles"]');
             const memoInput = document.getElementById('modal-member-memo');
+
+            // 초기화
+            roleCheckboxes.forEach(cb => cb.checked = false);
 
             if (name) {
                 const member = appData.members.find(m => m.name === name);
@@ -448,14 +474,17 @@
                 origInput.value = name;
                 nameInput.value = member.name;
                 genderSelect.value = member.gender || "형제";
-                roleSelect.value = member.role || "해당없음";
+                if (member.roles) {
+                    roleCheckboxes.forEach(cb => {
+                        if (member.roles.includes(cb.value)) cb.checked = true;
+                    });
+                }
                 memoInput.value = member.memo || '';
             } else {
                 title.innerText = "새 성원 추가";
                 origInput.value = "";
                 nameInput.value = "";
                 genderSelect.value = "형제";
-                roleSelect.value = "해당없음";
                 memoInput.value = "";
             }
             modal.classList.remove('hidden');
@@ -469,8 +498,12 @@
             const origName = document.getElementById('modal-member-original-name').value;
             const name = document.getElementById('modal-member-name').value.trim();
             const gender = document.getElementById('modal-member-gender').value;
-            const role = document.getElementById('modal-member-role').value;
             const memo = document.getElementById('modal-member-memo').value.trim();
+            
+            const roles = [];
+            document.querySelectorAll('input[name="modal-roles"]:checked').forEach(cb => {
+                roles.push(cb.value);
+            });
 
             if (!name) {
                 alert("성원 이름을 입력해주세요.");
@@ -480,14 +513,14 @@
             if (origName) {
                 const idx = appData.members.findIndex(m => m.name === origName);
                 if (idx !== -1) {
-                    appData.members[idx] = { name, gender, role, memo };
+                    appData.members[idx] = { name, gender, roles, memo };
                 }
             } else {
                 if (appData.members.some(m => m.name === name)) {
                     alert("이미 존재하는 성원 이름입니다.");
                     return;
                 }
-                appData.members.push({ name, gender, role, memo });
+                appData.members.push({ name, gender, roles, memo });
             }
 
             saveData();
@@ -672,7 +705,8 @@
             
             let csvContent = "\uFEFFNo,성원명,구분,임명," + allSessions.join(",") + "\n";
             appData.members.forEach((m, idx) => {
-                let row = [idx+1, m.name, m.gender, m.role];
+                let rolesStr = m.roles ? m.roles.join("+") : "";
+                let row = [idx+1, m.name, m.gender, rolesStr];
                 allSessions.forEach(s => {
                     let rec = appData.attendance[s]?.[m.name];
                     row.push(rec ? `${rec.status}${rec.reason ? ':'+rec.reason : ''}` : '-');
@@ -703,7 +737,7 @@
                     appData.volunteer[ym][m.name] = { hours: '', participated: false, study: '', memo: '' };
                 }
                 const v = appData.volunteer[ym][m.name];
-                const isPioneer = m.role === '파이오니아';
+                const isPioneer = m.roles && m.roles.includes('파이오니아');
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition";
@@ -725,11 +759,13 @@
                     `;
                 }
 
+                let roleBadgeStr = m.roles && m.roles.length > 0 ? m.roles.join(', ') : '해당없음';
+
                 tr.innerHTML = `
                     <td class="p-3 text-center text-xs text-slate-400">${idx + 1}</td>
                     <td class="p-3">
                         <div class="font-semibold text-slate-700">${m.name}</div>
-                        <span class="text-[10px] px-1.5 py-0.2 rounded font-medium ${m.role === '파이오니아' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-500'}">${m.role}</span>
+                        <span class="text-[10px] px-1.5 py-0.2 rounded font-medium ${isPioneer ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-500'}">${roleBadgeStr}</span>
                     </td>
                     <td class="p-3">${inputCellHTML}</td>
                     <td class="p-3">
