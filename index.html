@@ -215,12 +215,12 @@
             </div>
         </section>
 
-        <!-- ★ 4. 양치는 방문 탭 (새로 추가됨) -->
+        <!-- 4. 양치는 방문 탭 -->
         <section id="tab-shepherding" class="tab-content space-y-4 hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-3">
                 <div>
                     <h2 class="text-sm sm:text-base font-bold text-slate-700 flex items-center gap-2">
-                        <i class="fa-solid fa-heart-pulse text-indigo-600"></i> 양치는 방문 기록
+                        <i class="fa-solid fa-heart-pulse text-rose-500"></i> 양치는 방문 기록
                     </h2>
                     <p class="text-xs text-slate-500">방문 대상, 동반 방문자, 날짜 및 나눈 점 요약을 기록하고 공유합니다.</p>
                 </div>
@@ -244,7 +244,6 @@
                             </tr>
                         </thead>
                         <tbody id="shepherding-table-body" class="divide-y divide-slate-200">
-                            <!-- 동적 생성 -->
                         </tbody>
                     </table>
                 </div>
@@ -300,32 +299,32 @@
 
     </main>
 
-    <!-- 하단 네비게이션 바 (양치는 방문 탭 추가) -->
+    <!-- ★ 하단 네비게이션 바 (grid-cols-6 적용으로 스마트폰 6개 메뉴 완벽 배치) -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-40">
-        <div class="max-w-5xl mx-auto flex justify-around items-center h-16">
-            <button onclick="switchTab('group')" id="nav-group" class="nav-btn flex flex-col items-center justify-center flex-1 h-full text-indigo-600 font-bold transition">
-                <i class="fa-solid fa-people-group text-base sm:text-lg mb-0.5"></i>
-                <span class="text-[10px] sm:text-[11px]">사랑집단</span>
+        <div class="max-w-5xl mx-auto grid grid-cols-6 items-center h-16 px-1">
+            <button onclick="switchTab('group')" id="nav-group" class="nav-btn flex flex-col items-center justify-center h-full text-indigo-600 font-bold transition">
+                <i class="fa-solid fa-people-group text-sm sm:text-base mb-0.5"></i>
+                <span class="text-[9px] sm:text-[11px] leading-tight">사랑집단</span>
             </button>
-            <button onclick="switchTab('attendance')" id="nav-attendance" class="nav-btn flex flex-col items-center justify-center flex-1 h-full text-slate-400 hover:text-slate-600 font-medium transition">
-                <i class="fa-solid fa-clipboard-user text-base sm:text-lg mb-0.5"></i>
-                <span class="text-[10px] sm:text-[11px]">집회참석</span>
+            <button onclick="switchTab('attendance')" id="nav-attendance" class="nav-btn flex flex-col items-center justify-center h-full text-slate-400 hover:text-slate-600 font-medium transition">
+                <i class="fa-solid fa-clipboard-user text-sm sm:text-base mb-0.5"></i>
+                <span class="text-[9px] sm:text-[11px] leading-tight">집회참석</span>
             </button>
-            <button onclick="switchTab('volunteer')" id="nav-volunteer" class="nav-btn flex flex-col items-center justify-center flex-1 h-full text-slate-400 hover:text-slate-600 font-medium transition">
-                <i class="fa-solid fa-hands-holding-child text-base sm:text-lg mb-0.5"></i>
-                <span class="text-[10px] sm:text-[11px]">봉사보고</span>
+            <button onclick="switchTab('volunteer')" id="nav-volunteer" class="nav-btn flex flex-col items-center justify-center h-full text-slate-400 hover:text-slate-600 font-medium transition">
+                <i class="fa-solid fa-hands-holding-child text-sm sm:text-base mb-0.5"></i>
+                <span class="text-[9px] sm:text-[11px] leading-tight">봉사보고</span>
             </button>
-            <button onclick="switchTab('shepherding')" id="nav-shepherding" class="nav-btn flex flex-col items-center justify-center flex-1 h-full text-slate-400 hover:text-slate-600 font-medium transition">
-                <i class="fa-solid fa-heart-pulse text-base sm:text-lg mb-0.5"></i>
-                <span class="text-[10px] sm:text-[11px]">양치는방문</span>
+            <button onclick="switchTab('shepherding')" id="nav-shepherding" class="nav-btn flex flex-col items-center justify-center h-full text-slate-400 hover:text-slate-600 font-medium transition">
+                <i class="fa-solid fa-heart-pulse text-sm sm:text-base mb-0.5"></i>
+                <span class="text-[9px] sm:text-[11px] leading-tight">양치는방문</span>
             </button>
-            <button onclick="switchTab('publication')" id="nav-publication" class="nav-btn flex flex-col items-center justify-center flex-1 h-full text-slate-400 hover:text-slate-600 font-medium transition">
-                <i class="fa-solid fa-book-open text-base sm:text-lg mb-0.5"></i>
-                <span class="text-[10px] sm:text-[11px]">출판물</span>
+            <button onclick="switchTab('publication')" id="nav-publication" class="nav-btn flex flex-col items-center justify-center h-full text-slate-400 hover:text-slate-600 font-medium transition">
+                <i class="fa-solid fa-book-open text-sm sm:text-base mb-0.5"></i>
+                <span class="text-[9px] sm:text-[11px] leading-tight">출판물</span>
             </button>
-            <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center flex-1 h-full text-slate-400 hover:text-slate-600 font-medium transition">
-                <i class="fa-solid fa-gear text-base sm:text-lg mb-0.5"></i>
-                <span class="text-[10px] sm:text-[11px]">설정</span>
+            <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center h-full text-slate-400 hover:text-slate-600 font-medium transition">
+                <i class="fa-solid fa-gear text-sm sm:text-base mb-0.5"></i>
+                <span class="text-[9px] sm:text-[11px] leading-tight">설정</span>
             </button>
         </div>
     </nav>
@@ -388,7 +387,7 @@
         </div>
     </div>
 
-    <!-- ★ 모달: 양치는 방문 추가/수정 모달 -->
+    <!-- 모달: 양치는 방문 추가/수정 모달 -->
     <div id="shepherding-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-5 sm:p-6 space-y-4">
             <h3 id="shepherding-modal-title" class="text-sm sm:text-base font-bold text-slate-800">양치는 방문 기록</h3>
@@ -539,7 +538,7 @@
             attendance: {},
             volunteer: {},
             publication: {},
-            shepherding: [] // ★ 양치는 방문 목록
+            shepherding: []
         };
 
         const PUB_REP_NAMES = ["이지후", "서현우", "김성용", "조일성", "유동석", "이일천", "권숙이", "유금년", "김명분"];
@@ -590,7 +589,7 @@
 
     <!-- UI 로직 -->
     <script>
-        const APP_VERSION = '1.7.0';
+        const APP_VERSION = '1.8.0';
 
         function checkAppVersion() {
             const savedVersion = localStorage.getItem('sarang_app_version');
@@ -640,7 +639,7 @@
             renderGroupTable();
             renderAttendanceCheck();
             renderVolunteerTable();
-            renderShepherdingTable(); // 양치는 방문 표 렌더링
+            renderShepherdingTable();
             renderPublicationTable();
         }
 
@@ -653,8 +652,10 @@
 
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
             const nav = document.getElementById(`nav-${tabId}`);
-            nav.classList.remove('text-slate-400', 'font-medium');
-            nav.classList.add('text-indigo-600', 'font-bold');
+            if (nav) {
+                nav.classList.remove('text-slate-400', 'font-medium');
+                nav.classList.add('text-indigo-600', 'font-bold');
+            }
 
             if (tabId === 'attendance') renderAttendanceCheck();
             else if (tabId === 'volunteer') renderVolunteerTable();
@@ -704,8 +705,8 @@
                     <td class="p-3 text-center">${pubRepBadge}</td>
                     <td class="p-3 text-xs text-slate-500">${m.memo || '-'}</td>
                     <td class="p-3 text-center">
-                        <button onclick="openMemberModal('${m.name}')" class="text-indigo-600 hover:text-indigo-800 p-1 mr-1"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteMember('${m.name}')" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="openMemberModal('${m.name}')" class="text-indigo-600 hover:text-indigo-800 p-1 mr-1" title="수정"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteMember('${m.name}')" class="text-rose-500 hover:text-rose-700 p-1" title="삭제"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1195,7 +1196,6 @@
             statsBox.classList.remove('hidden');
         }
 
-        // 모바일 다운로드 완벽 지원
         let currentGeneratedBlob = null;
         let currentGeneratedFilename = "";
 
@@ -1345,7 +1345,7 @@
             document.body.removeChild(textarea);
         }
 
-        // ★ 4. 양치는 방문 로직 (표 렌더링, 모달, 공유)
+        // 4. 양치는 방문 로직
         function renderShepherdingTable() {
             const tbody = document.getElementById('shepherding-table-body');
             tbody.innerHTML = '';
@@ -1364,7 +1364,6 @@
                 return;
             }
 
-            // 날짜 최신순 정렬
             const sortedList = [...list].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
             sortedList.forEach((item, idx) => {
@@ -1411,7 +1410,7 @@
                 title.innerText = "새 양치는 방문 기록 추가";
                 idInput.value = "";
                 targetInput.value = "";
-                v1Input.value = "이지후"; // 기본 방문자
+                v1Input.value = "이지후";
                 v2Input.value = "";
                 dateInput.value = new Date().toISOString().slice(0, 10);
                 memoInput.value = "";
@@ -1469,7 +1468,6 @@
             }
         }
 
-        // 양치는 방문 요약 내용 공유 (카카오톡, 문자 등)
         function shareShepherdingRecord(id) {
             const appData = window.getAppData();
             const item = (appData.shepherding || []).find(x => x.id === id);
