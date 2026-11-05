@@ -144,7 +144,7 @@
             </div>
         </section>
 
-        <!-- 3. 봉사보고 탭 (전도인/파이오니아 구분) -->
+        <!-- 3. 봉사보고 탭 -->
         <section id="tab-volunteer" class="tab-content space-y-4 hidden">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
@@ -192,6 +192,7 @@
                 </div>
             </div>
 
+            <!-- 봉사 보고 입력 테이블 (명단 순서 유지) -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                     <span class="text-xs font-bold text-slate-700">전도인 봉사 보고 입력 (자동 저장)</span>
@@ -331,7 +332,7 @@
         </div>
     </nav>
 
-    <!-- 모달: 성원 추가/수정 (전도인 여부 체크박스 포함) -->
+    <!-- 모달: 성원 추가/수정 -->
     <div id="member-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-5 sm:p-6 space-y-4">
             <h3 id="member-modal-title" class="text-sm sm:text-base font-bold text-slate-800">성원 추가</h3>
@@ -536,7 +537,6 @@
         const db = getFirestore(app);
         const DATA_DOC = doc(db, "sarangGroup", "mainData");
 
-        // 서리우, 서리아는 전도인 제외(isPublisher: false) 설정
         const DEFAULT_MEMBERS = [
             { name: "이지후", gender: "형제", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
             { name: "정수빈", gender: "자매", isPublisher: true, roles: ["파이오니아"], isPubRep: false, memo: "" },
@@ -578,7 +578,6 @@
                         if (typeof m.isPubRep === 'undefined') {
                             m.isPubRep = PUB_REP_NAMES.includes(m.name);
                         }
-                        // isPublisher 필드가 없으면 기본 true (서리우/서리아만 기본 false)
                         if (typeof m.isPublisher === 'undefined') {
                             m.isPublisher = (m.name !== "서리우" && m.name !== "서리아");
                         }
@@ -617,7 +616,7 @@
 
     <!-- UI 로직 -->
     <script>
-        const APP_VERSION = '2.1.0';
+        const APP_VERSION = '2.2.0';
 
         function checkAppVersion() {
             const savedVersion = localStorage.getItem('sarang_app_version');
@@ -691,7 +690,7 @@
             else if (tabId === 'publication') renderPublicationTable();
         }
 
-        // 1. 성원 명단 (전도인 표시 컬럼 추가)
+        // 1. 성원 명단
         function renderGroupTable() {
             const tbody = document.getElementById('member-table-body');
             tbody.innerHTML = '';
@@ -1086,7 +1085,7 @@
             URL.revokeObjectURL(url);
         }
 
-        // 3. 월별 봉사 보고 및 통계 (전도인 전용 필터링 및 파이오니아 구분)
+        // 3. 월별 봉사 보고 테이블 (입력창: 기본 명단 순서 유지)
         function renderVolunteerTable() {
             const ym = document.getElementById('volunteer-month-input').value;
             const tbody = document.getElementById('volunteer-tbody');
@@ -1097,7 +1096,6 @@
             if (!appData.volunteer) appData.volunteer = {};
             if (!appData.volunteer[ym]) appData.volunteer[ym] = {};
 
-            // ★ 전도인(isPublisher !== false)만 봉사보고 목록에 표시
             const publishers = appData.members.filter(m => m.isPublisher !== false);
 
             publishers.forEach((m, idx) => {
@@ -1241,6 +1239,7 @@
         let currentGeneratedBlob = null;
         let currentGeneratedFilename = "";
 
+        // ★ 이미지 저장: 파이오니아 먼저, 그 다음 일반 전도인 정렬
         function generateCleanReportImage() {
             const ym = document.getElementById('volunteer-month-input').value;
             const sy = getServiceYear(ym);
@@ -1258,7 +1257,12 @@
             const volData = (appData.volunteer && appData.volunteer[ym]) || {};
             const publishers = appData.members.filter(m => m.isPublisher !== false);
 
-            publishers.forEach((m, idx) => {
+            // 파이오니아 먼저, 일반 전도인은 그 뒤로 정렬
+            const pioneers = publishers.filter(m => m.roles && m.roles.includes('파이오니아'));
+            const generalPublishers = publishers.filter(m => !m.roles || !m.roles.includes('파이오니아'));
+            const sortedPublishers = [...pioneers, ...generalPublishers];
+
+            sortedPublishers.forEach((m, idx) => {
                 const v = volData[m.name] || {};
                 const isPioneer = m.roles && m.roles.includes('파이오니아');
 
@@ -1342,6 +1346,7 @@
             alert("이미지를 1~2초간 꾹 눌러 '사진 앱에 저장'을 선택해 주세요!");
         }
 
+        // ★ 문자 복사: 파이오니아 먼저, 그 다음 일반 전도인 정렬
         function shareVolunteerReportSMS() {
             const ym = document.getElementById('volunteer-month-input').value;
             const sy = getServiceYear(ym);
@@ -1349,9 +1354,14 @@
             const volData = (appData && appData.volunteer && appData.volunteer[ym]) || {};
             const publishers = appData.members.filter(m => m.isPublisher !== false);
 
+            // 파이오니아 먼저, 일반 전도인은 그 뒤로 정렬
+            const pioneers = publishers.filter(m => m.roles && m.roles.includes('파이오니아'));
+            const generalPublishers = publishers.filter(m => !m.roles || !m.roles.includes('파이오니아'));
+            const sortedPublishers = [...pioneers, ...generalPublishers];
+
             let reportText = `[사랑 집단 ${sy}봉사연도 ${ym} 봉사 보고]\n\n`;
 
-            publishers.forEach((m, idx) => {
+            sortedPublishers.forEach((m, idx) => {
                 const v = volData[m.name] || {};
                 const isPioneer = m.roles && m.roles.includes('파이오니아');
                 
