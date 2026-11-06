@@ -17,6 +17,26 @@
 </head>
 <body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen pb-24">
 
+    <!-- 접속 잠금 보안 모달 (비밀번호 일치 전까지 화면 가림) -->
+    <div id="auth-lock-screen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
+            <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <div>
+                <h2 class="text-base font-bold text-slate-800">성원 보안 인증</h2>
+                <p class="text-xs text-slate-500 mt-1">접속을 위해 그룹 비밀번호를 입력해 주세요.</p>
+            </div>
+            <form onsubmit="handleAuthSubmit(event)" class="space-y-3">
+                <input type="password" id="auth-password-input" placeholder="비밀번호 입력 (기본: 7777)" class="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-center text-sm font-bold tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500" autofocus autocomplete="current-password">
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm shadow transition">
+                    접속하기
+                </button>
+            </form>
+            <p id="auth-error-msg" class="text-xs text-rose-500 font-semibold hidden">비밀번호가 일치하지 않습니다.</p>
+        </div>
+    </div>
+
     <!-- 상단 헤더 -->
     <header class="bg-indigo-600 text-white shadow sticky top-0 z-30">
         <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
@@ -192,7 +212,6 @@
                 </div>
             </div>
 
-            <!-- 봉사 보고 입력 테이블 (명단 순서 유지) -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                     <span class="text-xs font-bold text-slate-700">전도인 봉사 보고 입력 (자동 저장)</span>
@@ -285,17 +304,36 @@
 
         <!-- 6. 설정 탭 -->
         <section id="tab-settings" class="tab-content space-y-4 hidden">
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                <h2 class="text-sm sm:text-base font-bold text-slate-700 mb-1">데이터 및 설정 관리</h2>
-                <p class="text-xs text-slate-500 mb-4">클라우드 데이터베이스 초기화 및 백업을 수행합니다.</p>
-                
-                <div class="flex flex-col sm:flex-row flex-wrap gap-3">
-                    <button onclick="resetToDefaultData()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow">
-                        <i class="fa-solid fa-rotate-right"></i> 기본 데이터로 초기화 (클라우드)
-                    </button>
-                    <button onclick="exportDataJSON()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow">
-                        <i class="fa-solid fa-download"></i> 데이터 백업 (JSON)
-                    </button>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-6">
+                <!-- 비밀번호 변경 카드 -->
+                <div>
+                    <h2 class="text-sm sm:text-base font-bold text-slate-700 flex items-center gap-2 mb-1">
+                        <i class="fa-solid fa-shield-halved text-indigo-600"></i> 접속 비밀번호 관리
+                    </h2>
+                    <p class="text-xs text-slate-500 mb-3">웹앱 접속 시 요구되는 암호를 변경합니다.</p>
+                    <div class="flex flex-col sm:flex-row gap-2 max-w-sm">
+                        <input type="text" id="setting-new-password" placeholder="새 비밀번호 입력" class="border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button onclick="changeAppPassword()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg text-xs transition shadow whitespace-nowrap">
+                            비밀번호 변경
+                        </button>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- 데이터 백업 및 리셋 -->
+                <div>
+                    <h2 class="text-sm sm:text-base font-bold text-slate-700 mb-1">데이터 및 설정 관리</h2>
+                    <p class="text-xs text-slate-500 mb-4">클라우드 데이터베이스 초기화 및 백업을 수행합니다.</p>
+                    
+                    <div class="flex flex-col sm:flex-row flex-wrap gap-3">
+                        <button onclick="resetToDefaultData()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow">
+                            <i class="fa-solid fa-rotate-right"></i> 기본 데이터로 초기화 (클라우드)
+                        </button>
+                        <button onclick="exportDataJSON()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow">
+                            <i class="fa-solid fa-download"></i> 데이터 백업 (JSON)
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -562,7 +600,8 @@
             attendance: {},
             volunteer: {},
             publication: {},
-            shepherding: []
+            shepherding: [],
+            appPassword: "7777" // 기본 접속 비밀번호
         };
 
         const PUB_REP_NAMES = ["이지후", "서현우", "김성용", "조일성", "유동석", "이일천", "권숙이", "유금년", "김명분"];
@@ -588,6 +627,7 @@
                 if (!appData.volunteer) appData.volunteer = {};
                 if (!appData.publication) appData.publication = {};
                 if (!appData.shepherding) appData.shepherding = [];
+                if (!appData.appPassword) appData.appPassword = "7777";
 
                 statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> 클라우드 연결됨`;
                 statusEl.className = "text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-emerald-800 text-emerald-100 flex items-center gap-1 shadow-inner";
@@ -616,7 +656,50 @@
 
     <!-- UI 로직 -->
     <script>
-        const APP_VERSION = '2.2.0';
+        const APP_VERSION = '2.3.0';
+
+        // 접속 인증 처리 함수
+        function checkAuthentication() {
+            const isAuth = sessionStorage.getItem('sarang_is_authenticated');
+            const lockScreen = document.getElementById('auth-lock-screen');
+            if (isAuth === 'true') {
+                lockScreen.classList.add('hidden');
+            } else {
+                lockScreen.classList.remove('hidden');
+                document.getElementById('auth-password-input').focus();
+            }
+        }
+
+        function handleAuthSubmit(e) {
+            e.preventDefault();
+            const inputVal = document.getElementById('auth-password-input').value.trim();
+            const errorMsg = document.getElementById('auth-error-msg');
+            const appData = window.getAppData();
+            const correctPassword = (appData && appData.appPassword) ? appData.appPassword : "7777";
+
+            if (inputVal === correctPassword) {
+                sessionStorage.setItem('sarang_is_authenticated', 'true');
+                document.getElementById('auth-lock-screen').classList.add('hidden');
+                errorMsg.classList.add('hidden');
+            } else {
+                errorMsg.classList.remove('hidden');
+                document.getElementById('auth-password-input').value = "";
+                document.getElementById('auth-password-input').focus();
+            }
+        }
+
+        function changeAppPassword() {
+            const newPass = document.getElementById('setting-new-password').value.trim();
+            if (!newPass) {
+                alert("변경할 새 비밀번호를 입력해주세요.");
+                return;
+            }
+            const appData = window.getAppData();
+            appData.appPassword = newPass;
+            window.saveDataToCloud();
+            document.getElementById('setting-new-password').value = "";
+            alert(`비밀번호가 성공적으로 변경되었습니다.\n새 비밀번호: ${newPass}`);
+        }
 
         function checkAppVersion() {
             const savedVersion = localStorage.getItem('sarang_app_version');
@@ -638,6 +721,7 @@
 
         function initApp() {
             checkAppVersion();
+            checkAuthentication();
             const now = new Date();
             const yearMonth = now.toISOString().slice(0, 7);
             document.getElementById('attendance-month-input').value = yearMonth;
@@ -1239,7 +1323,7 @@
         let currentGeneratedBlob = null;
         let currentGeneratedFilename = "";
 
-        // ★ 이미지 저장: 파이오니아 먼저, 그 다음 일반 전도인 정렬
+        // 이미지 저장: 파이오니아 먼저, 그 다음 일반 전도인 정렬
         function generateCleanReportImage() {
             const ym = document.getElementById('volunteer-month-input').value;
             const sy = getServiceYear(ym);
@@ -1257,7 +1341,6 @@
             const volData = (appData.volunteer && appData.volunteer[ym]) || {};
             const publishers = appData.members.filter(m => m.isPublisher !== false);
 
-            // 파이오니아 먼저, 일반 전도인은 그 뒤로 정렬
             const pioneers = publishers.filter(m => m.roles && m.roles.includes('파이오니아'));
             const generalPublishers = publishers.filter(m => !m.roles || !m.roles.includes('파이오니아'));
             const sortedPublishers = [...pioneers, ...generalPublishers];
@@ -1346,7 +1429,7 @@
             alert("이미지를 1~2초간 꾹 눌러 '사진 앱에 저장'을 선택해 주세요!");
         }
 
-        // ★ 문자 복사: 파이오니아 먼저, 그 다음 일반 전도인 정렬
+        // 문자 복사: 파이오니아 먼저, 그 다음 일반 전도인 정렬
         function shareVolunteerReportSMS() {
             const ym = document.getElementById('volunteer-month-input').value;
             const sy = getServiceYear(ym);
@@ -1354,7 +1437,6 @@
             const volData = (appData && appData.volunteer && appData.volunteer[ym]) || {};
             const publishers = appData.members.filter(m => m.isPublisher !== false);
 
-            // 파이오니아 먼저, 일반 전도인은 그 뒤로 정렬
             const pioneers = publishers.filter(m => m.roles && m.roles.includes('파이오니아'));
             const generalPublishers = publishers.filter(m => !m.roles || !m.roles.includes('파이오니아'));
             const sortedPublishers = [...pioneers, ...generalPublishers];
@@ -1732,6 +1814,7 @@
                 appData.volunteer = {};
                 appData.shepherding = [];
                 appData.publication = {};
+                appData.appPassword = "7777";
                 window.saveDataToCloud();
                 alert("기본 데이터로 초기화되었습니다.");
             }
