@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>사랑 집단 통합 관리 (loveGroup)</title>
+    
+    <!-- 모바일 웹앱(PWA) 홈 화면 추가 및 아이콘 설정 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="사랑집단">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- 실제 업로드한 icon.png 파일 연결 -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon.png">
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome CDN -->
@@ -302,7 +313,7 @@
             </div>
         </section>
 
-        <!-- 6. 설정 탭 (7일 자동 백업 - 하위 컬렉션 저장 / 원클릭 복원 / 비밀번호 변경) -->
+        <!-- 6. 설정 탭 -->
         <section id="tab-settings" class="tab-content space-y-4 hidden">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-6">
                 
@@ -487,7 +498,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">지난 방문 날짜 <span class="text-[10px] font-normal text-slate-400">(선택)</span></label>
-                        <input type="date" id="modal-shepherding-last-date" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-600">
+                        <input type="date" id="modal-shepherding-last-date" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-600 text-xs">
                     </div>
                     <div>
                         <div class="flex justify-between items-center mb-1">
@@ -601,7 +612,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // ★ 소문자 loveGroup 컬렉션 및 하위 컬렉션(backups) 구조
+        // 소문자 loveGroup 컬렉션 및 하위 컬렉션(backups) 구조
         const DATA_DOC = doc(db, "loveGroup", "mainData");
         const BACKUP_SUBCOLLECTION = collection(db, "loveGroup", "mainData", "backups");
 
@@ -744,12 +755,10 @@
                     data: JSON.parse(JSON.stringify(appData))
                 };
 
-                // 하위 컬렉션 loveGroup/mainData/backups 에 저장
                 await setDoc(doc(db, "loveGroup", "mainData", "backups", docId), backupPayload);
                 localStorage.setItem('lovegroup_last_backup_ts', String(Date.now()));
                 updateLastBackupLabel(Date.now());
 
-                // 최근 10개 백업본만 유지
                 const snap = await getDocs(BACKUP_SUBCOLLECTION);
                 const docs = [];
                 snap.forEach(d => docs.push({ id: d.id, backupDate: d.data().backupDate || "" }));
@@ -833,7 +842,7 @@
 
     <!-- UI 로직 -->
     <script>
-        const APP_VERSION = '2.8.0';
+        const APP_VERSION = '2.8.1';
 
         function checkAuthentication() {
             const isAuth = sessionStorage.getItem('lovegroup_is_authenticated');
@@ -2002,11 +2011,12 @@
                     { name: "김사랑", gender: "자매", isPublisher: true, roles: [], isPubRep: false, memo: "" },
                     { name: "조일성", gender: "형제", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
                     { name: "유동석", gender: "형제", isPublisher: true, roles: [], isPubRep: true, memo: "" },
+                    { name: "유창석", gender: "형제", isPublisher: true, roles: [], isPubRep: false, memo: "" },
                     { name: "이일천", gender: "형제", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
                     { name: "권숙이", gender: "자매", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
                     { name: "유금년", gender: "자매", isPublisher: true, roles: [], isPubRep: true, memo: "" },
                     { name: "김명분", gender: "자매", isPublisher: true, roles: [], isPubRep: true, memo: "" },
-                    { name: "유창석", gender: "형제", isPublisher: true, roles: [], isPubRep: false, memo: "" }
+                    
                 ];
                 appData.pubTypes = ["연구용", "대형", "집회교재", "배부용"];
                 appData.attendance = {};
