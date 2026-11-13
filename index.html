@@ -17,7 +17,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen pb-24">
 
-    <!-- 접속 잠금 보안 모달 (비밀번호 일치 전까지 화면 가림) -->
+    <!-- 접속 잠금 보안 모달 -->
     <div id="auth-lock-screen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl">
             <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-2xl">
@@ -324,14 +324,14 @@
                 <!-- 데이터 백업 및 리셋 -->
                 <div>
                     <h2 class="text-sm sm:text-base font-bold text-slate-700 mb-1">데이터 및 설정 관리</h2>
-                    <p class="text-xs text-slate-500 mb-4">클라우드 데이터베이스 초기화 및 백업을 수행합니다.</p>
+                    <p class="text-xs text-slate-500 mb-4">클라우드 데이터베이스 백업 및 초기화를 수행합니다.</p>
                     
                     <div class="flex flex-col sm:flex-row flex-wrap gap-3">
-                        <button onclick="resetToDefaultData()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow">
-                            <i class="fa-solid fa-rotate-right"></i> 기본 데이터로 초기화 (클라우드)
-                        </button>
                         <button onclick="exportDataJSON()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow">
                             <i class="fa-solid fa-download"></i> 데이터 백업 (JSON)
+                        </button>
+                        <button onclick="resetToDefaultData()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow">
+                            <i class="fa-solid fa-rotate-right"></i> 기본 데이터로 초기화
                         </button>
                     </div>
                 </div>
@@ -575,6 +575,7 @@
         const db = getFirestore(app);
         const DATA_DOC = doc(db, "sarangGroup", "mainData");
 
+        // 유창석 성원 추가 반영
         const DEFAULT_MEMBERS = [
             { name: "이지후", gender: "형제", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
             { name: "정수빈", gender: "자매", isPublisher: true, roles: ["파이오니아"], isPubRep: false, memo: "" },
@@ -590,7 +591,8 @@
             { name: "이일천", gender: "형제", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
             { name: "권숙이", gender: "자매", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
             { name: "유금년", gender: "자매", isPublisher: true, roles: [], isPubRep: true, memo: "" },
-            { name: "김명분", gender: "자매", isPublisher: true, roles: [], isPubRep: true, memo: "" }
+            { name: "김명분", gender: "자매", isPublisher: true, roles: [], isPubRep: true, memo: "" },
+            { name: "유창석", gender: "형제", isPublisher: true, roles: [], isPubRep: false, memo: "" }
         ];
         const DEFAULT_PUB_TYPES = ["연구용", "대형", "집회교재", "배부용"];
 
@@ -601,17 +603,21 @@
             volunteer: {},
             publication: {},
             shepherding: [],
-            appPassword: "7777" // 기본 접속 비밀번호
+            appPassword: "7777"
         };
 
         const PUB_REP_NAMES = ["이지후", "서현우", "김성용", "조일성", "유동석", "이일천", "권숙이", "유금년", "김명분"];
+        let isInitialLoadDone = false;
 
         onSnapshot(DATA_DOC, (docSnap) => {
             const statusEl = document.getElementById("cloud-status");
             if (docSnap.exists()) {
                 appData = docSnap.data();
+                let needsSync = false;
+
                 if (!appData.members || appData.members.length === 0) {
                     appData.members = DEFAULT_MEMBERS;
+                    needsSync = true;
                 } else {
                     appData.members.forEach(m => {
                         if (typeof m.isPubRep === 'undefined') {
@@ -621,6 +627,12 @@
                             m.isPublisher = (m.name !== "서리우" && m.name !== "서리아");
                         }
                     });
+
+                    // 기존 명단에 '유창석'이 없으면 자동 추가
+                    if (!appData.members.some(m => m.name === "유창석")) {
+                        appData.members.push({ name: "유창석", gender: "형제", isPublisher: true, roles: [], isPubRep: false, memo: "" });
+                        needsSync = true;
+                    }
                 }
                 if (!appData.pubTypes) appData.pubTypes = DEFAULT_PUB_TYPES;
                 if (!appData.attendance) appData.attendance = {};
@@ -629,9 +641,15 @@
                 if (!appData.shepherding) appData.shepherding = [];
                 if (!appData.appPassword) appData.appPassword = "7777";
 
+                isInitialLoadDone = true;
+                if (needsSync) {
+                    setDoc(DATA_DOC, appData);
+                }
+
                 statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> 클라우드 연결됨`;
                 statusEl.className = "text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-emerald-800 text-emerald-100 flex items-center gap-1 shadow-inner";
-            } else {
+            } else if (!isInitialLoadDone) {
+                isInitialLoadDone = true;
                 setDoc(DATA_DOC, appData);
             }
             renderAllViews();
@@ -643,6 +661,7 @@
         });
 
         window.saveDataToCloud = async function() {
+            if (!isInitialLoadDone) return;
             try {
                 await setDoc(DATA_DOC, appData);
             } catch (e) {
@@ -656,7 +675,7 @@
 
     <!-- UI 로직 -->
     <script>
-        const APP_VERSION = '2.3.0';
+        const APP_VERSION = '2.6.0';
 
         // 접속 인증 처리 함수
         function checkAuthentication() {
@@ -1169,7 +1188,7 @@
             URL.revokeObjectURL(url);
         }
 
-        // 3. 월별 봉사 보고 테이블 (입력창: 기본 명단 순서 유지)
+        // 3. 월별 봉사 보고 테이블
         function renderVolunteerTable() {
             const ym = document.getElementById('volunteer-month-input').value;
             const tbody = document.getElementById('volunteer-tbody');
@@ -1323,7 +1342,6 @@
         let currentGeneratedBlob = null;
         let currentGeneratedFilename = "";
 
-        // 이미지 저장: 파이오니아 먼저, 그 다음 일반 전도인 정렬
         function generateCleanReportImage() {
             const ym = document.getElementById('volunteer-month-input').value;
             const sy = getServiceYear(ym);
@@ -1429,7 +1447,6 @@
             alert("이미지를 1~2초간 꾹 눌러 '사진 앱에 저장'을 선택해 주세요!");
         }
 
-        // 문자 복사: 파이오니아 먼저, 그 다음 일반 전도인 정렬
         function shareVolunteerReportSMS() {
             const ym = document.getElementById('volunteer-month-input').value;
             const sy = getServiceYear(ym);
@@ -1806,10 +1823,32 @@
 
         // 6. 초기화 및 백업
         function resetToDefaultData() {
-            if (confirm("클라우드의 모든 데이터를 기본 초기 상태로 리셋하시겠습니까?")) {
+            if (confirm("주의: 클라우드의 모든 기록(출석, 봉사, 방문기록)이 영구 삭제되고 초기 명단으로 리셋됩니다.\n정말 초기화하시겠습니까?")) {
+                const checkText = prompt("초기화를 확정하려면 '초기화' 라고 입력해 주세요.");
+                if (checkText !== "초기화") {
+                    alert("초기화가 취소되었습니다.");
+                    return;
+                }
                 const appData = window.getAppData();
-                appData.members = DEFAULT_MEMBERS;
-                appData.pubTypes = DEFAULT_PUB_TYPES;
+                appData.members = [
+                    { name: "이지후", gender: "형제", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
+                    { name: "정수빈", gender: "자매", isPublisher: true, roles: ["파이오니아"], isPubRep: false, memo: "" },
+                    { name: "서현우", gender: "형제", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
+                    { name: "구은희", gender: "자매", isPublisher: true, roles: ["파이오니아"], isPubRep: false, memo: "" },
+                    { name: "서리우", gender: "자녀", isPublisher: false, roles: [], isPubRep: false, memo: "" },
+                    { name: "서리아", gender: "자녀", isPublisher: false, roles: [], isPubRep: false, memo: "" },
+                    { name: "김성용", gender: "형제", isPublisher: true, roles: [], isPubRep: true, memo: "" },
+                    { name: "김에녹", gender: "형제", isPublisher: true, roles: [], isPubRep: false, memo: "" },
+                    { name: "김사랑", gender: "자매", isPublisher: true, roles: [], isPubRep: false, memo: "" },
+                    { name: "조일성", gender: "형제", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
+                    { name: "유동석", gender: "형제", isPublisher: true, roles: [], isPubRep: true, memo: "" },
+                    { name: "이일천", gender: "자매", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
+                    { name: "권숙이", gender: "자매", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
+                    { name: "유금년", gender: "자매", isPublisher: true, roles: [], isPubRep: true, memo: "" },
+                    { name: "김명분", gender: "자매", isPublisher: true, roles: [], isPubRep: true, memo: "" },
+                    { name: "유창석", gender: "형제", isPublisher: true, roles: [], isPubRep: false, memo: "" }
+                ];
+                appData.pubTypes = ["연구용", "대형", "집회교재", "배부용"];
                 appData.attendance = {};
                 appData.volunteer = {};
                 appData.shepherding = [];
