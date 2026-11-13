@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>사랑 집단 통합 관리</title>
+    <title>사랑 집단 통합 관리 (loveGroup)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome CDN -->
@@ -302,15 +302,42 @@
             </div>
         </section>
 
-        <!-- 6. 설정 탭 -->
+        <!-- 6. 설정 탭 (7일 자동 백업 - 하위 컬렉션 저장 / 원클릭 복원 / 비밀번호 변경) -->
         <section id="tab-settings" class="tab-content space-y-4 hidden">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-6">
+                
+                <!-- 7일 자동 클라우드 백업 및 복원 -->
+                <div>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                        <div>
+                            <h2 class="text-sm sm:text-base font-bold text-slate-700 flex items-center gap-2">
+                                <i class="fa-solid fa-cloud-arrow-up text-emerald-600"></i> 7일 주기 자동 클라우드 백업
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-0.5">loveGroup 하위 폴더(backups)에 7일마다 자동으로 스냅샷을 안전 보관합니다.</p>
+                        </div>
+                        <button onclick="runCloudBackup(true)" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3.5 py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 shadow whitespace-nowrap">
+                            <i class="fa-solid fa-floppy-disk"></i> 지금 즉시 백업하기
+                        </button>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-semibold text-slate-600">마지막 자동 백업일: <b id="last-backup-date-label" class="text-indigo-600">확인 중...</b></span>
+                            <button onclick="loadBackupHistory()" class="text-indigo-600 hover:underline text-[11px] font-medium"><i class="fa-solid fa-rotate"></i> 목록 새로고침</button>
+                        </div>
+                        <div id="backup-history-list" class="divide-y divide-slate-200 bg-white rounded-lg border border-slate-200 overflow-hidden text-xs">
+                            <div class="p-3 text-center text-slate-400">백업 내역을 불러오는 중입니다...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
                 <!-- 비밀번호 변경 카드 -->
                 <div>
                     <h2 class="text-sm sm:text-base font-bold text-slate-700 flex items-center gap-2 mb-1">
                         <i class="fa-solid fa-shield-halved text-indigo-600"></i> 접속 비밀번호 관리
                     </h2>
-                    <p class="text-xs text-slate-500 mb-3">웹앱 접속 시 요구되는 암호를 변경합니다.</p>
+                    <p class="text-xs text-slate-500 mb-3">웹앱 접속 시 요구되는 암호를 변경합니다. (loveGroup 저장)</p>
                     <div class="flex flex-col sm:flex-row gap-2 max-w-sm">
                         <input type="text" id="setting-new-password" placeholder="새 비밀번호 입력" class="border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         <button onclick="changeAppPassword()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg text-xs transition shadow whitespace-nowrap">
@@ -321,14 +348,14 @@
 
                 <hr class="border-slate-100">
 
-                <!-- 데이터 백업 및 리셋 -->
+                <!-- 파일 백업 및 리셋 -->
                 <div>
-                    <h2 class="text-sm sm:text-base font-bold text-slate-700 mb-1">데이터 및 설정 관리</h2>
-                    <p class="text-xs text-slate-500 mb-4">클라우드 데이터베이스 백업 및 초기화를 수행합니다.</p>
+                    <h2 class="text-sm sm:text-base font-bold text-slate-700 mb-1">파일 백업 및 초기화</h2>
+                    <p class="text-xs text-slate-500 mb-4">기기 내 파일로 다운로드하거나 초기 상태로 되돌립니다.</p>
                     
                     <div class="flex flex-col sm:flex-row flex-wrap gap-3">
                         <button onclick="exportDataJSON()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow">
-                            <i class="fa-solid fa-download"></i> 데이터 백업 (JSON)
+                            <i class="fa-solid fa-download"></i> 파일로 백업 다운로드 (JSON)
                         </button>
                         <button onclick="resetToDefaultData()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-4 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow">
                             <i class="fa-solid fa-rotate-right"></i> 기본 데이터로 초기화
@@ -560,7 +587,7 @@
     <!-- 파이어베이스 SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, getDocs, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCdZlSMTeiZvmN_qn4Yqva06NE_NR7QB7I",
@@ -573,9 +600,11 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const DATA_DOC = doc(db, "sarangGroup", "mainData");
 
-        // 유창석 성원 추가 반영
+        // ★ 소문자 loveGroup 컬렉션 및 하위 컬렉션(backups) 구조
+        const DATA_DOC = doc(db, "loveGroup", "mainData");
+        const BACKUP_SUBCOLLECTION = collection(db, "loveGroup", "mainData", "backups");
+
         const DEFAULT_MEMBERS = [
             { name: "이지후", gender: "형제", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
             { name: "정수빈", gender: "자매", isPublisher: true, roles: ["파이오니아"], isPubRep: false, memo: "" },
@@ -607,50 +636,54 @@
         };
 
         const PUB_REP_NAMES = ["이지후", "서현우", "김성용", "조일성", "유동석", "이일천", "권숙이", "유금년", "김명분"];
-        let isInitialLoadDone = false;
+        let isServerSynced = false;
 
-        onSnapshot(DATA_DOC, (docSnap) => {
+        onSnapshot(DATA_DOC, async (docSnap) => {
             const statusEl = document.getElementById("cloud-status");
             if (docSnap.exists()) {
-                appData = docSnap.data();
-                let needsSync = false;
+                const cloudData = docSnap.data();
+                let needsPatch = false;
 
-                if (!appData.members || appData.members.length === 0) {
-                    appData.members = DEFAULT_MEMBERS;
-                    needsSync = true;
+                if (!cloudData.members || cloudData.members.length === 0) {
+                    cloudData.members = DEFAULT_MEMBERS;
+                    needsPatch = true;
                 } else {
-                    appData.members.forEach(m => {
+                    cloudData.members.forEach(m => {
                         if (typeof m.isPubRep === 'undefined') {
                             m.isPubRep = PUB_REP_NAMES.includes(m.name);
+                            needsPatch = true;
                         }
                         if (typeof m.isPublisher === 'undefined') {
                             m.isPublisher = (m.name !== "서리우" && m.name !== "서리아");
+                            needsPatch = true;
                         }
                     });
-
-                    // 기존 명단에 '유창석'이 없으면 자동 추가
-                    if (!appData.members.some(m => m.name === "유창석")) {
-                        appData.members.push({ name: "유창석", gender: "형제", isPublisher: true, roles: [], isPubRep: false, memo: "" });
-                        needsSync = true;
+                    if (!cloudData.members.some(m => m.name === "유창석")) {
+                        cloudData.members.push({ name: "유창석", gender: "형제", isPublisher: true, roles: [], isPubRep: false, memo: "" });
+                        needsPatch = true;
                     }
                 }
-                if (!appData.pubTypes) appData.pubTypes = DEFAULT_PUB_TYPES;
-                if (!appData.attendance) appData.attendance = {};
-                if (!appData.volunteer) appData.volunteer = {};
-                if (!appData.publication) appData.publication = {};
-                if (!appData.shepherding) appData.shepherding = [];
-                if (!appData.appPassword) appData.appPassword = "7777";
+                if (!cloudData.pubTypes) { cloudData.pubTypes = DEFAULT_PUB_TYPES; needsPatch = true; }
+                if (!cloudData.attendance) { cloudData.attendance = {}; needsPatch = true; }
+                if (!cloudData.volunteer) { cloudData.volunteer = {}; needsPatch = true; }
+                if (!cloudData.publication) { cloudData.publication = {}; needsPatch = true; }
+                if (!cloudData.shepherding) { cloudData.shepherding = []; needsPatch = true; }
+                if (!cloudData.appPassword) { cloudData.appPassword = "7777"; needsPatch = true; }
 
-                isInitialLoadDone = true;
-                if (needsSync) {
-                    setDoc(DATA_DOC, appData);
+                appData = cloudData;
+                isServerSynced = true;
+
+                if (needsPatch) {
+                    await setDoc(DATA_DOC, appData, { merge: true });
                 }
 
-                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> 클라우드 연결됨`;
+                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> loveGroup 연결됨`;
                 statusEl.className = "text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-emerald-800 text-emerald-100 flex items-center gap-1 shadow-inner";
-            } else if (!isInitialLoadDone) {
-                isInitialLoadDone = true;
-                setDoc(DATA_DOC, appData);
+
+                checkAndRunAutoBackup();
+            } else if (!isServerSynced) {
+                isServerSynced = true;
+                await setDoc(DATA_DOC, appData, { merge: true });
             }
             renderAllViews();
         }, (error) => {
@@ -661,12 +694,137 @@
         });
 
         window.saveDataToCloud = async function() {
-            if (!isInitialLoadDone) return;
+            if (!isServerSynced) return;
             try {
-                await setDoc(DATA_DOC, appData);
+                await setDoc(DATA_DOC, appData, { merge: true });
             } catch (e) {
                 console.error("저장 실패:", e);
                 alert("클라우드 저장 중 오류가 발생했습니다.");
+            }
+        };
+
+        // 7일 단위 자동 클라우드 백업 (하위 컬렉션 loveGroup/mainData/backups 저장)
+        async function checkAndRunAutoBackup() {
+            if (!isServerSynced) return;
+            const lastBackupTs = Number(localStorage.getItem('lovegroup_last_backup_ts') || 0);
+            const now = Date.now();
+            const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+            updateLastBackupLabel(lastBackupTs);
+
+            if (now - lastBackupTs >= SEVEN_DAYS_MS) {
+                await window.runCloudBackup(false);
+            }
+        }
+
+        function updateLastBackupLabel(ts) {
+            const label = document.getElementById('last-backup-date-label');
+            if (!label) return;
+            if (!ts) {
+                label.innerText = "기록 없음 (곧 자동 백업됨)";
+            } else {
+                const d = new Date(ts);
+                label.innerText = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            }
+        }
+
+        window.runCloudBackup = async function(isManual = false) {
+            if (!isServerSynced) {
+                if (isManual) alert("클라우드 연결 후 백업할 수 있습니다.");
+                return;
+            }
+            try {
+                const now = new Date();
+                const dateKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+                const docId = isManual ? `manual_${dateKey}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}` : `auto_${dateKey}`;
+                
+                const backupPayload = {
+                    backupDate: now.toISOString(),
+                    type: isManual ? "수동 백업" : "7일 자동 백업",
+                    data: JSON.parse(JSON.stringify(appData))
+                };
+
+                // 하위 컬렉션 loveGroup/mainData/backups 에 저장
+                await setDoc(doc(db, "loveGroup", "mainData", "backups", docId), backupPayload);
+                localStorage.setItem('lovegroup_last_backup_ts', String(Date.now()));
+                updateLastBackupLabel(Date.now());
+
+                // 최근 10개 백업본만 유지
+                const snap = await getDocs(BACKUP_SUBCOLLECTION);
+                const docs = [];
+                snap.forEach(d => docs.push({ id: d.id, backupDate: d.data().backupDate || "" }));
+                docs.sort((a, b) => b.backupDate.localeCompare(a.backupDate));
+                if (docs.length > 10) {
+                    for (let i = 10; i < docs.length; i++) {
+                        await deleteDoc(doc(db, "loveGroup", "mainData", "backups", docs[i].id));
+                    }
+                }
+
+                if (isManual) {
+                    alert("현재 데이터가 loveGroup 하위 폴더(backups)에 안전하게 백업되었습니다.");
+                    window.loadBackupHistory();
+                }
+            } catch (e) {
+                console.error("백업 오류:", e);
+                if (isManual) alert("백업 저장 중 오류가 발생했습니다.");
+            }
+        };
+
+        window.loadBackupHistory = async function() {
+            const listDiv = document.getElementById('backup-history-list');
+            if (!listDiv) return;
+            listDiv.innerHTML = `<div class="p-3 text-center text-slate-400">백업 내역을 불러오는 중...</div>`;
+
+            try {
+                const snap = await getDocs(BACKUP_SUBCOLLECTION);
+                const items = [];
+                snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+                items.sort((a, b) => (b.backupDate || "").localeCompare(a.backupDate || ""));
+
+                if (items.length === 0) {
+                    listDiv.innerHTML = `<div class="p-3 text-center text-slate-400">저장된 백업 내역이 없습니다.</div>`;
+                    return;
+                }
+
+                listDiv.innerHTML = '';
+                items.forEach(item => {
+                    const dt = item.backupDate ? new Date(item.backupDate).toLocaleString('ko-KR') : item.id;
+                    const memberCount = item.data?.members?.length || 0;
+                    const row = document.createElement('div');
+                    row.className = "p-2.5 flex justify-between items-center hover:bg-slate-50";
+                    row.innerHTML = `
+                        <div>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${item.type === '수동 백업' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'} mr-1">${item.type || '자동 백업'}</span>
+                            <span class="font-medium text-slate-700">${dt}</span>
+                            <span class="text-[11px] text-slate-400 ml-1">(성원 ${memberCount}명)</span>
+                        </div>
+                        <button onclick="restoreFromBackup('${item.id}')" class="bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded text-[11px] font-bold shadow-sm transition">
+                            이 시점으로 복원
+                        </button>
+                    `;
+                    listDiv.appendChild(row);
+                });
+            } catch (e) {
+                console.error(e);
+                listDiv.innerHTML = `<div class="p-3 text-center text-rose-500">백업 목록을 불러오지 못했습니다.</div>`;
+            }
+        };
+
+        window.restoreFromBackup = async function(backupId) {
+            if (!confirm("선택한 백업 시점의 데이터로 현재 loveGroup 데이터를 복원하시겠습니까?")) return;
+            try {
+                const snap = await getDoc(doc(db, "loveGroup", "mainData", "backups", backupId));
+                if (snap.exists() && snap.data().data) {
+                    appData = snap.data().data;
+                    await setDoc(DATA_DOC, appData);
+                    renderAllViews();
+                    alert("선택한 시점의 데이터로 성공적으로 복원되었습니다!");
+                } else {
+                    alert("백업 데이터를 찾을 수 없습니다.");
+                }
+            } catch (e) {
+                console.error("복원 실패:", e);
+                alert("데이터 복원 중 오류가 발생했습니다.");
             }
         };
 
@@ -675,11 +833,10 @@
 
     <!-- UI 로직 -->
     <script>
-        const APP_VERSION = '2.6.0';
+        const APP_VERSION = '2.8.0';
 
-        // 접속 인증 처리 함수
         function checkAuthentication() {
-            const isAuth = sessionStorage.getItem('sarang_is_authenticated');
+            const isAuth = sessionStorage.getItem('lovegroup_is_authenticated');
             const lockScreen = document.getElementById('auth-lock-screen');
             if (isAuth === 'true') {
                 lockScreen.classList.add('hidden');
@@ -697,7 +854,7 @@
             const correctPassword = (appData && appData.appPassword) ? appData.appPassword : "7777";
 
             if (inputVal === correctPassword) {
-                sessionStorage.setItem('sarang_is_authenticated', 'true');
+                sessionStorage.setItem('lovegroup_is_authenticated', 'true');
                 document.getElementById('auth-lock-screen').classList.add('hidden');
                 errorMsg.classList.add('hidden');
             } else {
@@ -721,14 +878,14 @@
         }
 
         function checkAppVersion() {
-            const savedVersion = localStorage.getItem('sarang_app_version');
+            const savedVersion = localStorage.getItem('lovegroup_app_version');
             if (savedVersion && savedVersion !== APP_VERSION) {
                 if (confirm("새로운 업데이트가 있습니다! 최신 버전으로 새로고침하여 적용하시겠습니까?")) {
-                    localStorage.setItem('sarang_app_version', APP_VERSION);
+                    localStorage.setItem('lovegroup_app_version', APP_VERSION);
                     window.location.reload(true);
                 }
             } else if (!savedVersion) {
-                localStorage.setItem('sarang_app_version', APP_VERSION);
+                localStorage.setItem('lovegroup_app_version', APP_VERSION);
             }
         }
 
@@ -791,6 +948,9 @@
             else if (tabId === 'volunteer') renderVolunteerTable();
             else if (tabId === 'shepherding') renderShepherdingTable();
             else if (tabId === 'publication') renderPublicationTable();
+            else if (tabId === 'settings') {
+                if (window.loadBackupHistory) window.loadBackupHistory();
+            }
         }
 
         // 1. 성원 명단
@@ -1823,7 +1983,7 @@
 
         // 6. 초기화 및 백업
         function resetToDefaultData() {
-            if (confirm("주의: 클라우드의 모든 기록(출석, 봉사, 방문기록)이 영구 삭제되고 초기 명단으로 리셋됩니다.\n정말 초기화하시겠습니까?")) {
+            if (confirm("주의: loveGroup 클라우드의 모든 기록(출석, 봉사, 방문기록)이 영구 삭제되고 초기 명단으로 리셋됩니다.\n정말 초기화하시겠습니까?")) {
                 const checkText = prompt("초기화를 확정하려면 '초기화' 라고 입력해 주세요.");
                 if (checkText !== "초기화") {
                     alert("초기화가 취소되었습니다.");
@@ -1835,14 +1995,14 @@
                     { name: "정수빈", gender: "자매", isPublisher: true, roles: ["파이오니아"], isPubRep: false, memo: "" },
                     { name: "서현우", gender: "형제", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
                     { name: "구은희", gender: "자매", isPublisher: true, roles: ["파이오니아"], isPubRep: false, memo: "" },
-                    { name: "서리우", gender: "자녀", isPublisher: false, roles: [], isPubRep: false, memo: "" },
-                    { name: "서리아", gender: "자녀", isPublisher: false, roles: [], isPubRep: false, memo: "" },
+                    { name: "서리우", gender: "자매", isPublisher: false, roles: [], isPubRep: false, memo: "" },
+                    { name: "서리아", gender: "자매", isPublisher: false, roles: [], isPubRep: false, memo: "" },
                     { name: "김성용", gender: "형제", isPublisher: true, roles: [], isPubRep: true, memo: "" },
                     { name: "김에녹", gender: "형제", isPublisher: true, roles: [], isPubRep: false, memo: "" },
                     { name: "김사랑", gender: "자매", isPublisher: true, roles: [], isPubRep: false, memo: "" },
                     { name: "조일성", gender: "형제", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
                     { name: "유동석", gender: "형제", isPublisher: true, roles: [], isPubRep: true, memo: "" },
-                    { name: "이일천", gender: "자매", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
+                    { name: "이일천", gender: "형제", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
                     { name: "권숙이", gender: "자매", isPublisher: true, roles: ["파이오니아"], isPubRep: true, memo: "" },
                     { name: "유금년", gender: "자매", isPublisher: true, roles: [], isPubRep: true, memo: "" },
                     { name: "김명분", gender: "자매", isPublisher: true, roles: [], isPubRep: true, memo: "" },
@@ -1864,7 +2024,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `sarang_group_backup_${new Date().toISOString().slice(0,10)}.json`);
+            dlAnchor.setAttribute("download", `loveGroup_backup_${new Date().toISOString().slice(0,10)}.json`);
             dlAnchor.click();
         }
 
